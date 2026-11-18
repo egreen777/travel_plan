@@ -5,7 +5,7 @@
       "startTime": "14:15",
       "title": "다낭 공항 도착 · KE457",
       "location": "Da Nang International Airport",
-      "note": "입국·수하물 수령 후 픽업 기사와 만납니다.",
+      "note": "입국·수하물 수령 후 오른쪽 STAR Cafe 앞에서 픽업 기사와 만납니다. 검정 미쓰비시 XPander · 43A 43959 · VIP SEDAN · Trip.com 1400831335271387.",
       "durationMinutes": 45,
       "transportToNext": "Trip.com 픽업 차량",
       "travelMinutesToNext": 25,
@@ -29,7 +29,7 @@
       "startTime": "17:00",
       "title": "한시장 · 핑크성당",
       "location": "Han Market, 119 Tran Phu",
-      "note": "상점은 일찍 문을 닫을 수 있어 시장을 먼저 보고, 핑크성당은 도보로 함께 둘러봅니다. 비가 강하거나 지연되면 시장만 짧게 방문합니다.",
+      "note": "6시면 대부분 상점이 닫을 수 있어 시장을 먼저 봅니다. 핑크성당·짝퉁매장을 함께 둘러보고, Corner Coffee·Trinh·Mlem Pudding·Banh Mi Co Tien·분짜·넴느엉 후보를 고릅니다. 비가 강하거나 지연되면 시장만 짧게 방문합니다.",
       "durationMinutes": 65,
       "transportToNext": "도보",
       "travelMinutesToNext": 10,
@@ -131,7 +131,7 @@
       "startTime": "14:15",
       "title": "호이안 구시가지 산책",
       "location": "Hoi An Ancient Town",
-      "note": "황색 골목과 강변을 걷습니다. 침수나 강한 비가 있으면 강가 산책은 생략합니다.",
+      "note": "황색 골목과 강변을 걷고 Mót Hoi An·Faifo Coffee·루프탑 카페를 둘러봅니다. 14시 마사지(Ni Spa 등)를 넣거나 16시로 미루는 두 안을 현장에서 선택합니다. 침수나 강한 비가 있으면 강가 산책은 생략합니다.",
       "durationMinutes": 75,
       "transportToNext": "도보",
       "travelMinutesToNext": 10,
@@ -356,5 +356,5 @@
       "lng": 108.1971613
     }
   ],
-  "updatedAt": "2026-11-17T13:30:04.454Z"
+  "updatedAt": "2026-11-18T13:29:31.720Z"
 }

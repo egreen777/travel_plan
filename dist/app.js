@@ -12,21 +12,27 @@
   const WMO_SUMMARY = { 0: '맑음', 1: '대체로 맑음', 2: '구름 조금', 3: '흐림', 45: '안개', 48: '안개', 51: '약한 이슬비', 53: '이슬비', 55: '강한 이슬비', 61: '약한 비', 63: '비', 65: '강한 비', 80: '소나기', 81: '소나기', 82: '강한 소나기', 95: '뇌우', 96: '뇌우', 99: '뇌우' };
   let liveWeather = {};
   let liveCheckedAt = '';
+  let liveWeatherError = '';
 
   async function loadLiveWeather() {
     try {
       const response = await fetch(WEATHER_URL);
-      if (!response.ok) return;
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const { daily } = await response.json();
+      if (!daily?.time || !daily.weather_code || !daily.temperature_2m_max || !daily.temperature_2m_min) throw new Error('응답에 일별 날씨 데이터가 없습니다.');
+      liveCheckedAt = formatReceivedAt(new Date());
+      liveWeatherError = '';
       liveWeather = Object.fromEntries(daily.time.map((date, index) => [date, {
         high: Math.round(daily.temperature_2m_max[index]),
         low: Math.round(daily.temperature_2m_min[index]),
         summary: WMO_SUMMARY[daily.weather_code[index]] || '날씨 정보',
       }]));
-      liveCheckedAt = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date());
       renderWeather();
-    } catch {
-      // 실패하면 trip-info.json에 적힌 기본값을 그대로 보여줍니다.
+    } catch (error) {
+      liveCheckedAt = formatReceivedAt(new Date());
+      liveWeatherError = error instanceof Error ? error.message : String(error);
+      console.error('실시간 날씨 조회 실패:', error);
+      renderWeather();
     }
   }
 
@@ -42,6 +48,7 @@
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
   const dates = () => [...new Set(state.itinerary.map((item) => item.date))].sort();
   const itemsForDate = (date) => state.itinerary.filter((item) => item.date === date);
+  const itemKey = (item) => item.id || `${item.date}:${item.startTime}:${item.title}`;
   const mealGroupsForDate = (date) => (state.tripInfo?.meals || []).filter((group) => group.date === date);
   const selectedChoice = (group) => group.choices.find((choice) => choice.id === state.selectedMeals[`${group.date}:${group.meal}`]) || group.choices[0];
   const mapsLocation = (item) => {
@@ -57,6 +64,7 @@
   const formatDay = (date) => new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date(`${date}T00:00:00`));
   const formatLongDay = (date) => new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date(`${date}T00:00:00`));
   const formatSaved = (date) => date ? new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(date)) : '—';
+  const formatReceivedAt = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   const durationLabel = (minutes) => minutes >= 60 ? `${Math.floor(minutes / 60)}시간${minutes % 60 ? ` ${minutes % 60}분` : ''}` : `${minutes}분`;
   const getToken = () => { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; } };
   const setToken = (token) => { try { sessionStorage.setItem(TOKEN_KEY, token); } catch {} };
@@ -105,7 +113,7 @@
     if (!items.length) return '<div class="editor-empty">이 날짜에는 아직 일정이 없습니다.</div>';
     return items.map((item, index) => `<div class="stop-row">
       <time class="stop-time" datetime="${item.date}T${item.startTime}">${escapeHtml(item.startTime)}</time>
-      <button class="stop-card ${item.id === state.activeId ? 'is-active' : ''}" type="button" aria-pressed="${item.id === state.activeId}" data-stop-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.title)} 지도에서 선택">
+      <button class="stop-card ${itemKey(item) === state.activeId ? 'is-active' : ''}" type="button" aria-pressed="${itemKey(item) === state.activeId}" data-stop-id="${escapeHtml(itemKey(item))}" aria-label="${escapeHtml(item.title)} 지도에서 선택">
         <span class="stop-topline"><span class="stop-title">${escapeHtml(item.title)}</span><span class="stop-duration">${durationLabel(item.durationMinutes)}</span></span>
         <span class="stop-location">${escapeHtml(item.location)}</span>
         ${item.note ? `<span class="stop-note">${escapeHtml(item.note)}</span>` : ''}
@@ -149,8 +157,8 @@
     if (!weather) { els.weather.innerHTML = ''; return; }
     const live = liveWeather[state.activeDate];
     const view = live ? { ...weather, ...live } : weather;
-    const checkedAt = live ? `실시간 ${liveCheckedAt}` : (state.tripInfo.weatherCheckedAt || '');
-    els.weather.innerHTML = `<div class="weather-main"><span class="section-kicker">DA NANG WEATHER · ${escapeHtml(checkedAt)}</span><strong>${escapeHtml(view.summary)}</strong><span class="weather-temp">${view.high}° <i>/</i> ${view.low}°</span></div><p>${escapeHtml(weather.advice)}</p><p class="weather-notice">${escapeHtml(state.tripInfo.weatherNotice || '')}</p><div class="weather-links"><a href="${escapeHtml(weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">기상청 예보 ↗</a><a href="${escapeHtml(state.tripInfo.weatherNoticeUrl || weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">다낭 기상 경보 ↗</a></div>`;
+    const checkedAt = live ? `실시간 수신 ${liveCheckedAt}` : liveWeatherError ? `실시간 조회 실패 ${liveCheckedAt} · 기본 데이터` : liveCheckedAt ? `실시간 조회 ${liveCheckedAt} · 기본 데이터` : `기본 데이터 확인 ${state.tripInfo.weatherCheckedAt || '시각 미상'}`;
+    els.weather.innerHTML = `<div class="weather-main"><span class="section-kicker">DA NANG WEATHER · ${escapeHtml(checkedAt)}</span><strong>${escapeHtml(view.summary)}</strong><span class="weather-temp">${view.high}° <i>/</i> ${view.low}°</span></div><p>${escapeHtml(weather.advice)}</p><p class="weather-notice">${escapeHtml(state.tripInfo.weatherNotice || '')}</p><div class="weather-links"><a href="${escapeHtml(weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">기상청 예보 ↗</a></div>`;
   }
 
   function renderMeals() {
@@ -165,7 +173,8 @@
       const choice = group?.choices.find((entry) => entry.id === button.dataset.choice);
       if (!group || !choice) return;
       state.selectedMeals[`${group.date}:${group.meal}`] = choice.id;
-      state.activeId = itemsForDate(state.activeDate).find((item) => item.mealSlot === group.meal)?.id || null;
+      const selectedItem = itemsForDate(state.activeDate).find((item) => item.mealSlot === group.meal);
+      state.activeId = selectedItem ? itemKey(selectedItem) : null;
       renderList(); renderMeals(); renderMap();
     }));
   }
@@ -185,8 +194,9 @@
     markersLayer.clearLayers(); mealMarkersLayer.clearLayers(); routeLayer.clearLayers();
     if (!items.length) { map.setView([37.5665, 126.978], 11); return; }
     const points = items.map((item, index) => {
-      const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ className: `custom-map-marker ${item.id === state.activeId ? 'is-active' : ''}`, html: `<span class="map-pin ${item.id === state.activeId ? 'is-active' : ''}"><span>${index + 1}</span></span>`, iconSize: [30, 30], iconAnchor: [15, 30] }), title: `${index + 1}. ${item.title}` }).addTo(markersLayer);
-      marker.on('click', () => selectStop(item.id));
+      const key = itemKey(item);
+      const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ className: `custom-map-marker ${key === state.activeId ? 'is-active' : ''}`, html: `<span class="map-pin ${key === state.activeId ? 'is-active' : ''}"><span>${index + 1}</span></span>`, iconSize: [30, 30], iconAnchor: [15, 30] }), title: `${index + 1}. ${item.title}` }).addTo(markersLayer);
+      marker.on('click', () => selectStop(key));
       return [item.lat, item.lng];
     });
     if (points.length > 1) L.polyline(points, { color: '#0879b8', weight: 3, opacity: .8, className: 'route-line' }).addTo(routeLayer);
@@ -196,14 +206,15 @@
       const marker = L.marker([choice.lat, choice.lng], { icon: L.divIcon({ className: 'meal-marker-wrap', html: `<span class="meal-map-pin ${isSelected ? 'is-selected' : ''}" title="${escapeHtml(choice.title)}">${isSelected ? '✓' : 'M'}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] }), title: `${group.label}: ${choice.title}` }).addTo(mealMarkersLayer);
       marker.on('click', () => {
         state.selectedMeals[`${group.date}:${group.meal}`] = choice.id;
-        state.activeId = itemsForDate(state.activeDate).find((item) => item.mealSlot === group.meal)?.id || null;
+        const selectedItem = itemsForDate(state.activeDate).find((item) => item.mealSlot === group.meal);
+        state.activeId = selectedItem ? itemKey(selectedItem) : null;
         renderList(); renderMeals(); renderMap();
       });
       alternatePoints.push([choice.lat, choice.lng]);
     }));
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const bounds = L.latLngBounds([...points, ...alternatePoints]); map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14, animate: !reducedMotion });
-    if (state.activeId) { const selected = items.find((item) => item.id === state.activeId); if (selected) map.flyTo([selected.lat, selected.lng], Math.max(map.getZoom(), 13), { duration: reducedMotion ? 0 : .35 }); }
+    if (state.activeId) { const selected = items.find((item) => itemKey(item) === state.activeId); if (selected) map.flyTo([selected.lat, selected.lng], Math.max(map.getZoom(), 13), { duration: reducedMotion ? 0 : .35 }); }
   }
 
   function selectStop(id) { state.activeId = id; renderList(); renderMap(); }
