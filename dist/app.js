@@ -55,6 +55,17 @@
     const query = Number.isFinite(item.lat) && Number.isFinite(item.lng) ? `${item.lat},${item.lng}` : item.mapsQuery || item.location || item.title;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
   };
+  const normalizePlace = (value) => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9가-힣]+/g, ' ').trim();
+  const candidateLocation = (candidate) => {
+    if (Number.isFinite(candidate.lat) && Number.isFinite(candidate.lng)) return candidate;
+    const sources = [...(state.tripInfo?.meals || []).flatMap((group) => group.choices), ...state.itinerary];
+    const candidateNames = [candidate.title, candidate.mapsQuery, candidate.location].map(normalizePlace).filter(Boolean);
+    return sources.find((source) => {
+      if (!Number.isFinite(source.lat) || !Number.isFinite(source.lng)) return false;
+      const sourceNames = [source.title, source.mapsQuery, source.location].map(normalizePlace).filter(Boolean);
+      return candidateNames.some((name) => sourceNames.some((sourceName) => sourceName === name || (name.length > 7 && (sourceName.includes(name) || name.includes(sourceName)))));
+    }) || null;
+  };
   const displayItemsForDate = (date) => itemsForDate(date).map((item) => {
     if (!item.mealSlot) return item;
     const group = mealGroupsForDate(date).find((entry) => entry.meal === item.mealSlot);
@@ -184,7 +195,17 @@
     els.candidateTabs.innerHTML = tabs.map((tab) => `<button class="candidate-tab" type="button" role="tab" aria-selected="${tab.id === state.candidateCategory}" data-category="${escapeHtml(tab.id)}">${escapeHtml(tab.label)}</button>`).join('');
     els.candidateTabs.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => { state.candidateCategory = button.dataset.category; renderCandidates(); }));
     const candidates = (state.tripInfo?.candidates || []).filter((item) => item.category === state.candidateCategory);
-    els.candidates.innerHTML = candidates.map((item, index) => `<article class="candidate-card"><span class="candidate-index">${String(index + 1).padStart(2, '0')}</span><div class="candidate-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.location)}</span><p>${escapeHtml(item.description)}</p></div><a class="map-link" href="${escapeHtml(mapsLocation(item))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.title)} Google Maps 위치 보기">map</a></article>`).join('') || '<p class="candidate-empty">등록된 후보가 없습니다.</p>';
+    els.candidates.innerHTML = candidates.map((item, index) => {
+      const location = candidateLocation(item);
+      return `<article class="candidate-card ${location ? 'is-map-focus' : ''}" ${location ? `data-candidate-index="${index}"` : ''}><span class="candidate-index">${String(index + 1).padStart(2, '0')}</span><div class="candidate-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.location)}</span><p>${escapeHtml(item.description)}</p></div><a class="map-link" href="${escapeHtml(mapsLocation(item))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.title)} Google Maps 위치 보기">map</a></article>`;
+    }).join('') || '<p class="candidate-empty">등록된 후보가 없습니다.</p>';
+    els.candidates.querySelectorAll('[data-candidate-index]').forEach((card) => card.addEventListener('click', (event) => {
+      if (event.target.closest('a')) return;
+      const location = candidateLocation(candidates[Number(card.dataset.candidateIndex)]);
+      if (!map || !location) return;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      map.flyTo([location.lat, location.lng], Math.max(map.getZoom(), 13), { duration: reducedMotion ? 0 : .35 });
+    }));
   }
 
   function renderMap() {

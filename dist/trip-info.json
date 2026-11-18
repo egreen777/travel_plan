@@ -1,9 +1,9 @@
 {
   "weather": [
-    {"date":"2026-11-19","high":29,"low":24,"summary":"구름 많고 뇌우","advice":"시장 방문은 짧게, 우비를 준비하세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"},
-    {"date":"2026-11-20","high":28,"low":24,"summary":"구름 많고 보통 비","advice":"바구니배·등불배는 비와 강 수위를 현장에서 확인한 뒤 결정하세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"},
-    {"date":"2026-11-21","high":29,"low":24,"summary":"구름 많고 강한 비","advice":"오행산 계단이 젖거나 미끄러우면 참 조각 박물관으로 바꾸세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"},
-    {"date":"2026-11-22","high":30,"low":24,"summary":"소나기와 뇌우","advice":"13시 공항 이동에 여유를 두고 최신 예보를 확인하세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"}
+    {"date":"2026-11-19","high":29,"low":24,"summary":"구름 많고 뇌우","advice":"시장 방문은 짧게, 우비를 준비하세요.","sourceUrl":"https://www.accuweather.com/en/vn/da-nang/352954/weather-forecast/352954"},
+    {"date":"2026-11-20","high":28,"low":24,"summary":"구름 많고 보통 비","advice":"바구니배·등불배는 비와 강 수위를 현장에서 확인한 뒤 결정하세요.","sourceUrl":"https://www.accuweather.com/en/vn/da-nang/352954/weather-forecast/352954"},
+    {"date":"2026-11-21","high":29,"low":24,"summary":"구름 많고 강한 비","advice":"오행산 계단이 젖거나 미끄러우면 참 조각 박물관으로 바꾸세요.","sourceUrl":"https://www.accuweather.com/en/vn/da-nang/352954/weather-forecast/352954"},
+    {"date":"2026-11-22","high":30,"low":24,"summary":"소나기와 뇌우","advice":"13시 공항 이동에 여유를 두고 최신 예보를 확인하세요.","sourceUrl":"https://www.accuweather.com/en/vn/da-nang/352954/weather-forecast/352954"}
   ],
   "weatherCheckedAt":"2026-11-17",
   "weatherNotice":"다낭 기상수문청은 11월 19–22일 일부 지역의 중·강한 비와 뇌우, 도시 저지대 침수 가능성을 알렸습니다. 야외·수상 활동은 당일 운영 여부를 확인하세요.",
