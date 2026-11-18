@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="다낭 3박 4일 일정, 날씨, 식사 후보와 지도 동선을 확인하세요.">
+    <title>다낭 3박 4일 여행 일정</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <link rel="stylesheet" href="/styles.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-actions">
+          <span id="save-status" class="save-status" aria-live="polite"></span>
+          <a id="edit-link" class="button button-quiet" href="/?edit=1">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 16.5-.8 3.8 3.8-.8L18.5 8l-2.7-2.7L4 16.5Z"></path><path d="m14.5 6.5 2.7 2.7M4 20.3h4"></path></svg>
+            일정 편집
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <section class="intro-section" aria-labelledby="trip-title">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>DA NANG · 3 NIGHTS · 4 DAYS</div>
+        <div class="intro-grid">
+          <div>
+            <h1 id="trip-title">다낭 <em>3박 4일</em></h1>
+            <p class="intro-copy">11월 19일–22일 · 항공, 숙소, 날짜별 일정과 식사 후보를 한눈에 확인하세요.</p>
+          </div>
+          <div class="trip-meta" aria-label="여행 정보">
+            <div><span>TRIP WINDOW</span><strong id="trip-window">불러오는 중</strong></div>
+            <div><span>STOPS</span><strong id="stop-count">—</strong></div>
+            <div><span>LAST SAVED</span><strong id="last-saved">—</strong></div>
+          </div>
+        </div>
+        <div class="trip-essentials" aria-label="항공과 숙소">
+          <article class="essential-card">
+            <span class="section-kicker">THU · NOV 19 · ARRIVAL</span>
+            <strong>11:10 ICN → 14:15 DAD</strong>
+            <span>대한항공 KE457 · 인천 T2</span>
+          </article>
+          <article class="essential-card">
+            <span class="section-kicker">SUN · NOV 22 · DEPARTURE</span>
+            <strong>15:45 DAD → 22:05 ICN</strong>
+            <span>대한항공 KE458 · 인천 T2</span>
+          </article>
+          <article class="essential-card essential-hotel">
+            <span class="section-kicker">STAY · 3 NIGHTS</span>
+            <strong>Danang Marriott Resort &amp; Spa</strong>
+            <span>07 Truong Sa · +84 (236) 396-8888</span>
+            <a class="map-link" href="https://www.google.com/maps/search/?api=1&amp;query=Danang+Marriott+Resort+%26+Spa%2C+07+Truong+Sa%2C+Da+Nang" target="_blank" rel="noopener noreferrer" aria-label="Danang Marriott Resort 위치 보기">map</a>
+          </article>
+        </div>
+      </section>
+
+      <section id="editor-auth" class="editor-auth hidden" aria-labelledby="auth-title">
+        <div>
+          <span class="section-kicker">EDITOR ACCESS</span>
+          <h2 id="auth-title">편집자 토큰을 입력하세요.</h2>
+          <p>토큰은 이 브라우저의 세션에만 보관되며, 저장할 때만 서버에 전송됩니다.</p>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <label for="editor-token">편집자 토큰</label>
+          <div class="auth-row">
+            <input id="editor-token" name="token" type="password" autocomplete="current-password" required>
+            <button class="button button-dark" type="submit">확인</button>
+          </div>
+          <p id="auth-error" class="form-error" role="alert"></p>
+        </form>
+      </section>
+
+      <section id="editor-toolbar" class="editor-toolbar hidden" aria-label="편집 도구">
+        <div>
+          <span class="section-kicker">EDIT MODE</span>
+          <h2>일정을 다듬어 보세요.</h2>
+          <p>현재 날짜의 항목을 수정하고, 순서를 바꾼 뒤 저장하세요.</p>
+        </div>
+        <div class="toolbar-actions">
+          <button id="add-stop" class="button button-outline" type="button">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            일정 추가
+          </button>
+          <button id="cancel-edit" class="button button-quiet" type="button">취소</button>
+          <button id="logout-edit" class="button button-quiet" type="button">로그아웃</button>
+          <button id="save-itinerary" class="button button-dark" type="button">변경 저장</button>
+        </div>
+      </section>
+
+      <div id="editor-message" class="editor-message hidden" role="status"></div>
+
+      <nav class="day-nav" aria-label="여행 날짜">
+        <div id="day-tabs" class="day-tabs" role="tablist" aria-label="날짜 선택"></div>
+      </nav>
+
+      <section class="workspace" aria-label="일정과 지도">
+        <section class="itinerary-panel" aria-labelledby="day-heading">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">DAY <span id="day-number">01</span></span>
+              <h2 id="day-heading">일정을 불러오는 중</h2>
+            </div>
+            <span id="day-summary" class="day-summary"></span>
+          </div>
+          <div id="weather-card" class="weather-card" aria-live="polite"></div>
+          <div id="itinerary-list" class="itinerary-list" aria-live="polite"></div>
+          <section class="meal-plan" aria-labelledby="meal-heading">
+            <div class="subsection-heading">
+              <div><span class="section-kicker">MEALS</span><h3 id="meal-heading">오늘의 식사 후보</h3></div>
+              <span class="meal-hint">장소를 고르면 지도 경로가 바뀝니다</span>
+            </div>
+            <div id="meal-list" class="meal-list"></div>
+          </section>
+        </section>
+
+        <section class="map-panel" aria-labelledby="map-heading">
+          <div class="map-heading">
+            <div>
+              <span class="section-kicker">ROUTE PREVIEW</span>
+              <h2 id="map-heading">오늘의 동선</h2>
+            </div>
+            <span id="route-summary" class="route-summary"></span>
+          </div>
+          <div id="map" class="map" role="application" aria-label="선택한 날짜의 여행 경로 지도"></div>
+          <div class="map-footer">
+            <span><span class="legend-dot legend-start" aria-hidden="true"></span> 일정 순서</span>
+            <span><span class="legend-meal" aria-hidden="true">M</span> 식당 후보</span>
+            <span><span class="legend-line" aria-hidden="true"></span> 이동 순서(직선 표시)</span>
+            <span class="map-source">© OpenStreetMap contributors</span>
+          </div>
+        </section>
+      </section>
+
+      <section class="candidate-section" aria-labelledby="candidate-heading">
+        <div class="candidate-heading">
+          <div>
+            <span class="section-kicker">SHORTLIST</span>
+            <h2 id="candidate-heading">여행 후보 모음</h2>
+            <p>원자료와 여행 정보·현지 추천을 모았습니다. 가격과 영업시간은 방문 전 확인하세요.</p>
+          </div>
+          <div id="candidate-tabs" class="candidate-tabs" role="tablist" aria-label="후보 종류"></div>
+        </div>
+        <div id="candidate-list" class="candidate-list" aria-live="polite"></div>
+      </section>
+
+      <details class="trip-notes">
+        <summary>공항 준비 · 픽업 · 커피 주문 메모</summary>
+        <div class="trip-notes-grid">
+          <section>
+            <span class="section-kicker">ICN PARKING</span>
+            <h3>인천공항 출발 전</h3>
+            <p><a href="https://valet.amanopark.co.kr/booking-waitlist" target="_blank" rel="noopener noreferrer">아마노 주차 예약 대기</a></p>
+            <p><a href="https://www.airport.kr/ap_ko/968/subview.do" target="_blank" rel="noopener noreferrer">제2터미널 주차장 현황</a></p>
+          </section>
+          <section>
+            <span class="section-kicker">DAD PICKUP</span>
+            <h3>다낭 공항 픽업</h3>
+            <p>짐을 찾은 뒤 오른쪽 STAR Cafe 앞 · VIP SEDAN</p>
+            <p>Trip.com 픽업 번호: <strong>1400831335271387</strong></p>
+          </section>
+          <section>
+            <span class="section-kicker">VIETNAMESE COFFEE</span>
+            <h3>커피 주문</h3>
+            <p><strong>CA PHE DEN</strong> 블랙 · <strong>CA PHE SUA DA</strong> 연유 아이스</p>
+            <p><strong>CA PHE SUA NONG</strong> 따뜻한 연유 · <strong>CA PHE MUOI</strong> 소금</p>
+            <p><strong>CA PHE DUA</strong> 코코넛 · <strong>BAC XIU</strong> 우유 많은 커피</p>
+            <p>설탕 없이: <strong>KHONG DUONG</strong></p>
+          </section>
+        </div>
+      </details>
+    </main>
+
+    <footer class="site-footer">
+      <p>가격과 영업시간은 방문 전에 확인해 주세요.</p>
+      <span>다낭 · 2026년 11월 19–22일</span>
+    </footer>
+  </body>
+</html>

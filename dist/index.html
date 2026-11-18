@@ -1,0 +1,695 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="다낭 3박 4일 일정, 날씨, 식사 후보와 지도 동선을 확인하세요.">
+    <title>다낭 3박 4일 여행 일정</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <style>
+:root {
+  --ink: #183247;
+  --ink-soft: #4b6478;
+  --ink-faint: #5d768b;
+  --paper: #ffffff;
+  --paper-deep: #f3f9fd;
+  --surface: #ffffff;
+  --line: #dce8f1;
+  --blue-bright: #36a9ed;
+  --blue-deep: #0879b8;
+  --blue: #0879b8;
+  --blue-soft: #e8f6fd;
+  --danger: #b42318;
+  --shadow: 0 12px 32px rgba(31, 104, 150, .07);
+  --sans: "Manrope", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --display: var(--sans);
+  --mono: "DM Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+button, input, textarea { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+a { color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid rgba(8, 121, 184, .7); outline-offset: 3px; }
+.skip-link { position: absolute; left: 16px; top: -48px; z-index: 20; padding: 10px 14px; background: var(--ink); color: #fff; border-radius: 3px; }
+.skip-link:focus { top: 12px; }
+
+.site-header { border-bottom: 1px solid var(--line); background: rgba(255, 255, 255, .96); }
+.static-site .site-header { display: none; }
+.header-inner, main, .site-footer { width: min(1240px, calc(100% - 48px)); margin-inline: auto; }
+.header-inner { min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.header-actions, .toolbar-actions, .auth-row { display: flex; align-items: center; gap: 10px; }
+.save-status { color: var(--ink-faint); font-family: var(--mono); font-size: 11px; letter-spacing: .02em; }
+.button { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid transparent; border-radius: 3px; padding: 9px 15px; font-size: 13px; font-weight: 700; letter-spacing: .01em; transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .2s ease; touch-action: manipulation; }
+.button:disabled { cursor: not-allowed; opacity: .45; transform: none; }
+.button:hover { transform: translateY(-1px); }.button:active { transform: translateY(0); }
+.button svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.button-dark { background: var(--ink); color: #fff; }.button-dark:hover { background: #293b49; }
+.button-outline { border-color: var(--ink); color: var(--ink); background: transparent; }.button-outline:hover { background: var(--ink); color: #fff; }
+.button-quiet { border-color: var(--line); color: var(--ink-soft); background: transparent; }.button-quiet:hover { border-color: var(--ink); color: var(--ink); background: var(--surface); }
+
+.intro-section { padding: 88px 0 56px; }
+.eyebrow, .section-kicker { color: var(--blue); font-family: var(--mono); font-size: 11px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+.eyebrow { display: flex; align-items: center; gap: 8px; }.eyebrow-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-bright); }
+.intro-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; align-items: end; gap: 60px; margin-top: 18px; }
+h1, h2, p { margin: 0; } h1 { max-width: 750px; font-family: var(--display); font-size: clamp(46px, 6vw, 78px); font-weight: 600; letter-spacing: -.045em; line-height: 1.02; }
+h1 em { color: var(--blue-bright); font-style: normal; }.intro-copy { max-width: 540px; margin-top: 22px; color: var(--ink-soft); font-size: 16px; }
+.trip-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 28px; padding: 18px 0 3px; border-top: 1px solid var(--line); }.trip-meta div:last-child { grid-column: 1 / -1; }
+.trip-meta span { display: block; color: var(--ink-faint); font-family: var(--mono); font-size: 10px; letter-spacing: .1em; }.trip-meta strong { display: block; margin-top: 4px; font-size: 16px; font-weight: 700; }
+
+.day-nav { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }.day-tabs { display: flex; width: min(1240px, calc(100% - 48px)); margin-inline: auto; overflow-x: auto; scrollbar-width: none; }.day-tabs::-webkit-scrollbar { display: none; }
+.day-tab { min-width: 160px; min-height: 65px; position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 13px; padding: 10px 18px 10px 0; margin-right: 30px; border: 0; border-bottom: 3px solid transparent; color: var(--ink-faint); background: transparent; text-align: left; touch-action: manipulation; }.day-tab:hover { color: var(--ink); }.day-tab[aria-selected="true"] { border-bottom-color: var(--blue-bright); color: var(--ink); }
+.day-tab-number { color: var(--blue-bright); font-family: var(--mono); font-size: 12px; }.day-tab-label { display: block; font-size: 14px; font-weight: 700; }.day-tab-sub { display: block; color: currentColor; font-family: var(--mono); font-size: 10px; font-weight: 400; letter-spacing: .02em; opacity: .7; }
+
+.workspace { display: grid; grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); gap: 32px; padding: 45px 0 72px; }.itinerary-panel, .map-panel { min-width: 0; }.panel-heading, .map-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }.panel-heading h2, .map-heading h2, .editor-toolbar h2, .editor-auth h2 { margin-top: 4px; font-size: 22px; letter-spacing: -.03em; line-height: 1.2; }.day-summary, .route-summary { color: var(--ink-faint); font-family: var(--mono); font-size: 11px; white-space: nowrap; }
+.itinerary-list { position: relative; }.itinerary-list::before { content: ""; position: absolute; top: 21px; bottom: 22px; left: 77px; width: 1px; background: var(--line); }.stop-row { position: relative; display: grid; grid-template-columns: 62px 1fr; gap: 30px; }.stop-time { padding-top: 21px; color: var(--ink-soft); font-family: var(--mono); font-size: 13px; text-align: right; }.stop-card { position: relative; width: 100%; min-height: 116px; display: block; padding: 18px 20px 18px 25px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--ink); text-align: left; transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease; }.stop-card::before { content: ""; position: absolute; top: 23px; left: -36px; width: 11px; height: 11px; border: 3px solid var(--paper); border-radius: 50%; background: var(--blue-bright); box-shadow: 0 0 0 1px var(--blue-bright); }.stop-card.is-active { border-color: var(--line); background: var(--surface); box-shadow: var(--shadow); }.stop-card.is-active::before { background: var(--blue); box-shadow: 0 0 0 1px var(--blue), 0 0 0 5px rgba(8, 121, 184, .12); }
+.stop-topline { display: flex; align-items: start; justify-content: space-between; gap: 12px; }.stop-title { font-size: 17px; font-weight: 800; line-height: 1.25; }.stop-duration { flex: 0 0 auto; color: var(--blue); font-family: var(--mono); font-size: 10px; letter-spacing: .02em; }.stop-location { margin-top: 4px; color: var(--ink-soft); font-size: 13px; }.stop-note { max-width: 510px; margin-top: 12px; color: var(--ink-faint); font-size: 13px; line-height: 1.5; }.transport-row { min-height: 54px; display: flex; align-items: center; gap: 13px; margin-left: 62px; padding-left: 30px; color: var(--ink-faint); font-family: var(--mono); font-size: 10px; }.transport-row::before { content: ""; width: 18px; height: 1px; background: var(--line); }.transport-mode { color: var(--blue); }
+
+.map-panel { position: relative; }.map { min-height: 600px; height: calc(100vh - 360px); max-height: 720px; min-width: 0; overflow: hidden; border: 1px solid var(--line); background: #f3f9fd; box-shadow: var(--shadow); isolation: isolate; }.map .leaflet-control-zoom a { color: var(--ink); }.leaflet-container { font-family: var(--sans); }.leaflet-control-attribution { font-size: 9px; }.map-pin { width: 30px; height: 30px; display: grid; place-items: center; border: 3px solid #fff; border-radius: 50% 50% 50% 0; background: var(--blue); box-shadow: 0 5px 12px rgba(23, 35, 45, .22); color: #fff; font-family: var(--mono); font-size: 10px; font-weight: 500; transform: rotate(-45deg); }.map-pin span { transform: rotate(45deg); }.map-pin.is-active { background: #075f92; transform: rotate(-45deg) scale(1.18); z-index: 500 !important; }.route-line { stroke: var(--blue); stroke-dasharray: 7 9; stroke-linecap: round; }
+.map-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 17px; padding-top: 12px; color: var(--ink-faint); font-family: var(--mono); font-size: 10px; }.legend-dot { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; background: var(--blue-bright); }.legend-line { display: inline-block; width: 19px; height: 2px; margin-right: 5px; vertical-align: middle; background: var(--blue); }.map-source { margin-left: auto; }
+.map-fallback { min-height: 600px; display: grid; place-items: center; padding: 30px; background: var(--paper-deep); color: var(--ink-soft); text-align: center; }.map-fallback strong { display: block; color: var(--ink); }
+
+.editor-auth, .editor-toolbar { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin: 28px 0 0; padding: 24px 26px; border: 1px solid var(--line); background: var(--surface); }.editor-auth p, .editor-toolbar p { margin-top: 5px; color: var(--ink-soft); font-size: 13px; }.auth-form { min-width: min(100%, 390px); }.auth-form label, .editor-field label { display: block; margin-bottom: 5px; color: var(--ink-soft); font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }.auth-row input { min-width: 0; flex: 1; }.auth-row .button { flex: 0 0 auto; }.editor-message { margin: 18px 0 -20px; padding: 11px 14px; border-left: 3px solid var(--blue); background: var(--blue-soft); color: var(--ink); font-size: 13px; }.form-error { min-height: 20px; margin-top: 7px !important; color: var(--danger) !important; }.hidden { display: none !important; }
+.editor-list { display: grid; gap: 14px; }.editor-card { padding: 20px; border: 1px solid var(--line); background: var(--surface); }.editor-card-grid { display: grid; grid-template-columns: 110px minmax(0, 1fr) 120px; gap: 14px; }.editor-card-grid + .editor-card-grid { margin-top: 14px; }.editor-field-wide { grid-column: span 2; }.editor-field input, .editor-field textarea { width: 100%; min-height: 44px; border: 1px solid var(--line); border-radius: 2px; padding: 9px 10px; background: #fff; color: var(--ink); }.editor-field textarea { min-height: 74px; resize: vertical; }.editor-field input:focus, .editor-field textarea:focus { border-color: var(--blue); outline: 2px solid rgba(8, 121, 184, .18); outline-offset: 1px; }.editor-card-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }.editor-card-actions .button { min-height: 38px; padding: 7px 11px; font-size: 12px; }.button-danger { color: var(--danger); border-color: #e7b3ad; background: transparent; }.button-danger:hover { color: #fff; background: var(--danger); }.move-actions { display: flex; gap: 7px; }.editor-empty { padding: 40px 20px; border: 1px dashed var(--line); color: var(--ink-faint); text-align: center; }
+
+.site-footer { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding: 22px 0 32px; border-top: 1px solid var(--line); color: var(--ink-faint); font-family: var(--mono); font-size: 10px; letter-spacing: .03em; }.site-footer p { color: var(--ink-soft); font-family: var(--display); font-size: 15px; letter-spacing: 0; }
+
+@media (max-width: 900px) { .header-inner, main, .site-footer, .day-tabs { width: min(100% - 32px, 720px); }.intro-section { padding: 60px 0 40px; }.intro-grid { grid-template-columns: 1fr; gap: 36px; }.trip-meta { max-width: 500px; }.workspace { grid-template-columns: 1fr; gap: 48px; padding-top: 34px; }.map-panel { order: -1; }.map { min-height: 380px; height: 52vw; max-height: 540px; }.itinerary-list::before { left: 69px; }.stop-row { grid-template-columns: 55px 1fr; gap: 24px; }.transport-row { margin-left: 55px; padding-left: 24px; }.stop-card::before { left: -31px; }.editor-auth, .editor-toolbar { align-items: start; flex-direction: column; }.auth-form { width: 100%; }.toolbar-actions { width: 100%; justify-content: end; flex-wrap: wrap; } }
+@media (max-width: 560px) { .header-inner, main, .site-footer, .day-tabs { width: calc(100% - 28px); }.header-inner { min-height: 68px; }.save-status { display: none; }.button { padding-inline: 12px; }.header-actions .button svg { display: none; }.intro-section { padding: 46px 0 31px; }.eyebrow { font-size: 9px; }.intro-grid { margin-top: 14px; gap: 28px; } h1 { font-size: clamp(40px, 12vw, 62px); }.intro-copy { font-size: 14px; }.desktop-only { display: none; }.trip-meta { gap: 16px 20px; }.trip-meta strong { font-size: 14px; }.day-tab { min-width: 136px; min-height: 58px; margin-right: 14px; padding-right: 10px; }.day-tab-label { font-size: 13px; }.workspace { padding: 28px 0 52px; gap: 35px; }.map { min-height: 310px; height: 76vw; }.map-footer { gap: 10px; }.map-source { width: 100%; margin-left: 0; }.panel-heading, .map-heading { align-items: start; flex-direction: column; gap: 5px; margin-bottom: 14px; }.panel-heading h2, .map-heading h2 { font-size: 20px; }.itinerary-list::before { left: 55px; }.stop-row { grid-template-columns: 44px 1fr; gap: 20px; }.stop-time { padding-top: 19px; font-size: 11px; }.stop-card { min-height: 108px; padding: 16px 15px 16px 18px; }.stop-card::before { left: -26px; top: 21px; width: 10px; height: 10px; }.stop-title { font-size: 15px; }.stop-location, .stop-note { font-size: 12px; }.transport-row { min-height: 46px; margin-left: 44px; padding-left: 20px; gap: 9px; }.editor-auth, .editor-toolbar { padding: 19px 17px; }.toolbar-actions { justify-content: stretch; }.toolbar-actions .button { flex: 1; }.editor-card { padding: 15px; }.editor-card-grid { grid-template-columns: 1fr 1fr; gap: 12px; }.editor-field-wide { grid-column: 1 / -1; }.editor-card-grid:first-child .editor-field:nth-child(2) { grid-column: span 1; }.editor-card-actions { align-items: stretch; flex-direction: column; }.move-actions { display: grid; grid-template-columns: 1fr 1fr; }.move-actions .button, .editor-card-actions > .button { width: 100%; }.site-footer { align-items: start; flex-direction: column; gap: 6px; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+
+.trip-essentials { display: grid; grid-template-columns: 1fr 1fr 1.35fr; gap: 12px; margin-top: 38px; }
+.essential-card { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 18px 20px; border: 1px solid var(--line); background: rgba(255, 255, 255, .92); }
+.essential-card strong { font-size: 15px; line-height: 1.35; }.essential-card > span:not(.section-kicker) { color: var(--ink-soft); font-size: 12px; }
+.essential-card a, .trip-notes a { color: var(--blue); font-size: 12px; font-weight: 700; text-underline-offset: 3px; }
+.weather-card { display: grid; grid-template-columns: minmax(130px, .8fr) 1.2fr; gap: 8px 18px; margin: 0 0 22px; padding: 17px 19px; border: 1px solid #d8edf9; border-left: 4px solid var(--blue-bright); background: #f1f9fe; }
+.weather-main { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 12px; }.weather-main .section-kicker { grid-column: 1 / -1; font-size: 9px; }.weather-main strong { font-size: 14px; }.weather-temp { color: var(--ink-soft); font-family: var(--mono); font-size: 13px; }.weather-temp i { color: var(--ink-faint); font-style: normal; }
+.weather-card > p { align-self: center; color: var(--ink-soft); font-size: 12px; }.weather-card .weather-notice { grid-column: 1 / -1; padding-top: 8px; border-top: 1px solid #d8edf9; font-size: 11px; }.weather-links { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 16px; }.weather-links a { min-height: 44px; display: inline-flex; align-items: center; color: var(--blue); font-size: 11px; font-weight: 700; text-underline-offset: 3px; }
+.meal-plan { margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line); }.subsection-heading, .meal-group-heading { display: flex; justify-content: space-between; align-items: end; gap: 15px; }.subsection-heading h3 { margin-top: 4px; font-size: 19px; letter-spacing: -.025em; }.meal-hint { color: var(--ink-soft); font-size: 11px; }
+.meal-day-note { margin: 14px 0 18px; padding: 10px 12px; border-left: 2px solid var(--blue-bright); background: #eff8fe; color: var(--ink-soft); font-size: 12px; }
+.meal-group + .meal-group { margin-top: 18px; }.meal-group-heading { margin-bottom: 8px; }.meal-group-heading h4 { font-size: 14px; }.meal-group-heading > span { color: var(--ink-soft); font-family: var(--mono); font-size: 10px; text-align: right; }
+.meal-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; }.meal-choice { min-width: 0; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line); background: var(--surface); }.meal-choice.is-selected { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.meal-choice-button { min-height: 105px; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 12px; border: 0; background: transparent; color: var(--ink); text-align: left; }.meal-choice-button strong { font-size: 13px; line-height: 1.3; }.meal-choice-button span { color: var(--blue); font-size: 12px; font-weight: 700; }.meal-choice-button small { color: var(--ink-soft); font-size: 10px; line-height: 1.35; }.meal-choice-button:hover { background: #f4faff; }
+
+.candidate-section { padding: 0 0 64px; }.candidate-heading { display: flex; justify-content: space-between; align-items: end; gap: 30px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }.candidate-heading h2 { margin-top: 5px; font-size: 26px; letter-spacing: -.035em; }.candidate-heading p { margin-top: 7px; color: var(--ink-soft); font-size: 13px; }.candidate-tabs { display: flex; gap: 5px; padding: 4px; border: 1px solid var(--line); background: #fff; }.candidate-tab { min-height: 44px; padding: 8px 13px; border: 0; background: transparent; color: var(--ink-soft); font-size: 12px; font-weight: 700; }.candidate-tab[aria-selected="true"] { background: var(--ink); color: #fff; }
+.candidate-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 16px; }.candidate-card { min-width: 0; display: grid; grid-template-columns: 28px 1fr 44px; align-items: start; gap: 10px; padding: 15px; border: 1px solid var(--line); background: var(--surface); }.candidate-index { padding-top: 3px; color: var(--blue-deep); font-family: var(--mono); font-size: 10px; }.candidate-card > a { width: 44px; height: 44px; display: grid; place-items: center; border: 1px solid var(--line); color: var(--blue); text-decoration: none; }.candidate-card > a:hover { background: var(--blue-soft); }.candidate-empty { grid-column: 1 / -1; padding: 20px; color: var(--ink-soft); }
+.trip-notes { margin: 0 0 54px; border: 1px solid var(--line); background: var(--surface); }.trip-notes summary { min-height: 54px; display: flex; align-items: center; padding: 12px 18px; cursor: pointer; font-size: 14px; font-weight: 700; }.trip-notes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; padding: 20px; border-top: 1px solid var(--line); }.trip-notes-grid h3 { margin: 7px 0; font-size: 15px; }.trip-notes-grid p { margin-top: 6px; color: var(--ink-soft); font-size: 12px; }
+
+.meal-map-pin { width: 28px; height: 28px; display: grid; place-items: center; border: 2px solid white; border-radius: 50%; background: var(--ink-soft); box-shadow: 0 3px 9px rgba(23, 35, 45, .25); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 700; }.meal-map-pin.is-selected { background: var(--blue); }
+.legend-meal { display: inline-grid; width: 16px; height: 16px; place-items: center; margin-right: 3px; border-radius: 50%; background: var(--ink-soft); color: #fff; font-size: 9px; }
+
+@media (max-width: 900px) { .trip-essentials { grid-template-columns: 1fr 1fr; }.essential-hotel { grid-column: 1 / -1; }.candidate-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }.trip-notes-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .trip-essentials { grid-template-columns: 1fr; margin-top: 26px; }.essential-hotel { grid-column: auto; }.essential-card { padding: 15px; }.weather-card { grid-template-columns: 1fr; gap: 9px; padding: 14px; }.weather-card .weather-notice, .weather-links { grid-column: auto; }.meal-plan { margin-top: 24px; padding-top: 20px; }.subsection-heading, .candidate-heading { align-items: flex-start; flex-direction: column; }.subsection-heading { gap: 7px; }.meal-hint { font-size: 10px; }.meal-choices { grid-template-columns: 1fr; }.meal-choice-button { min-height: 82px; }.candidate-heading h2 { font-size: 23px; }.candidate-tabs { width: 100%; }.candidate-tab { flex: 1; padding-inline: 7px; }.candidate-list { grid-template-columns: 1fr; }.trip-notes-grid { grid-template-columns: 1fr; gap: 20px; padding: 16px; } }
+
+/* White and sky-blue layout for the trip board. */
+body { background: var(--paper); }
+.site-header { position: sticky; top: 0; z-index: 1000; border-color: var(--line); background: rgba(255, 255, 255, .96); backdrop-filter: blur(12px); }
+.header-inner { justify-content: flex-end; min-height: 64px; }
+.button { border-radius: 9px; }
+.button-dark { background: var(--blue); }.button-dark:hover { background: #06669d; }
+.button-outline { border-color: var(--blue); color: var(--blue); }.button-outline:hover { background: var(--blue); }
+.button-quiet { border-color: var(--line); color: var(--ink-soft); }
+.intro-section { margin: 20px 0 26px; padding: 28px 0 25px; border-bottom: 1px solid var(--line); background: #fff; color: var(--ink); box-shadow: none; }
+.intro-section .eyebrow, .intro-section .section-kicker { color: var(--blue); }
+.intro-section .eyebrow-dot { background: var(--blue-bright); box-shadow: none; }
+.intro-grid { grid-template-columns: minmax(0, 1fr) 300px; gap: 50px; margin-top: 21px; }
+h1 { max-width: none; color: var(--ink); font-family: var(--sans); font-size: clamp(32px, 4.3vw, 46px); font-weight: 800; letter-spacing: -.045em; line-height: 1.2; }
+h1 em { color: var(--blue); font-style: normal; }
+.intro-copy { max-width: 580px; margin-top: 12px; color: var(--ink-soft); font-size: 14px; line-height: 1.7; }
+.trip-meta { gap: 19px 24px; padding-top: 17px; border-color: var(--line); }
+.trip-meta span { color: var(--ink-faint); font-size: 9px; }
+.trip-meta strong { color: var(--ink); font-size: 15px; }
+.trip-essentials { position: relative; grid-template-columns: 1fr 1fr 1.32fr; gap: 10px; margin-top: 34px; }
+.essential-card { min-height: 110px; justify-content: center; gap: 6px; padding: 17px 19px; border: 1px solid var(--line); border-radius: 12px; background: #fff; box-shadow: 0 5px 16px rgba(31, 104, 150, .05); }
+.essential-card .section-kicker { color: var(--blue); font-size: 9px; }
+.essential-card strong { color: var(--ink); font-size: 14px; }
+.essential-card > span:not(.section-kicker) { color: var(--ink-soft); }
+.essential-card a { color: var(--blue); }
+.day-nav { position: static; border-color: var(--line); background: #fff; }
+.day-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; width: 100%; margin: 0; overflow: visible; }
+.day-tab { min-width: 0; min-height: 66px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 1px; margin: 0; padding: 8px 7px; border-radius: 8px 8px 0 0; }
+.day-tab[aria-selected="true"] { border-bottom-color: var(--blue-bright); background: #eff8fe; color: var(--ink); }
+.day-tab-number { color: var(--blue); font-size: 10px; }
+.day-tab-label { font-size: 12px; line-height: 1.25; }
+.day-tab-sub { font-size: 9px; }
+.workspace { gap: 24px; padding-top: 34px; }
+.itinerary-panel { padding: 26px 24px 28px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: var(--shadow); }
+.panel-heading { align-items: center; margin-bottom: 19px; }
+.panel-heading h2, .map-heading h2 { font-family: var(--sans); font-size: 21px; font-weight: 700; letter-spacing: -.025em; }
+.day-summary, .route-summary { color: var(--ink-soft); font-family: var(--sans); font-size: 11px; }
+.weather-card { border-color: #d8edf9; border-left-color: var(--blue-bright); border-radius: 12px; background: #f1f9fe; box-shadow: 0 5px 16px rgba(31, 104, 150, .045); }
+.stop-card { min-height: 104px; border-radius: 11px; }
+.stop-card.is-active { border-color: #c7e7f8; background: #f8fcff; }
+.stop-title { font-size: 16px; }
+.stop-note { color: var(--ink-soft); }
+.transport-row { color: var(--ink-soft); }
+.map-panel { position: sticky; top: 112px; align-self: start; }
+.map-heading { min-height: 50px; margin-bottom: 14px; }
+.map { min-height: 610px; border: 1px solid var(--line); border-radius: 14px; background: #f3f9fd; box-shadow: 0 10px 28px rgba(31, 104, 150, .08); }
+.map-fallback { min-height: 100%; height: 100%; }
+.map-pin { background: var(--blue); }
+.map-pin.is-active { background: #075f92; }
+.leaflet-tile-pane { filter: saturate(.78) contrast(.98); }
+.map-footer { color: var(--ink-soft); }
+.day-nav { margin: 26px 0 0; padding: 4px; border: 1px solid var(--line); border-radius: 12px; }
+.day-tabs { width: 100%; margin: 0; }
+.stop-card { padding-right: 82px; }
+.stop-map-link { position: absolute; z-index: 1; top: 10px; right: 10px; }
+.map-link { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--blue); font-family: var(--mono); font-size: 10px; font-weight: 700; line-height: 1; text-decoration: none; }
+.map-link:hover { border-color: #a9d9f3; background: #eff8fe; }
+.candidate-copy { min-width: 0; display: block; color: var(--ink); }
+.candidate-copy strong { display: block; font-size: 14px; line-height: 1.35; }
+.candidate-copy > span { display: block; margin-top: 3px; color: var(--ink-soft); font-size: 11px; }
+.candidate-copy p { margin-top: 8px; color: var(--ink-soft); font-size: 12px; }
+.meal-choice > .map-link { align-self: flex-end; margin: 0 10px 10px; }
+.essential-card .map-link { font-size: 10px; }
+.meal-plan { margin-top: 24px; padding-top: 21px; }
+.meal-choice { overflow: hidden; border-color: var(--line); border-radius: 11px; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.meal-choice:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(31, 104, 150, .08); }
+.meal-choice.is-selected { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.meal-choice-button { min-height: 112px; padding: 14px; }
+.meal-choice-button strong { font-size: 14px; }
+.meal-choice-button span { color: var(--blue-deep); }
+
+.candidate-section { margin-bottom: 50px; padding: 30px; border: 1px solid var(--line); border-radius: 16px; background: #fff; }
+.candidate-heading { align-items: center; border-color: var(--line); }
+.candidate-heading h2 { font-family: var(--sans); font-size: 23px; font-weight: 700; }
+.candidate-tabs { border-color: var(--line); border-radius: 11px; background: #fff; }
+.candidate-tab { border-radius: 8px; }
+.candidate-tab[aria-selected="true"] { background: #e8f6fd; color: var(--blue); box-shadow: inset 0 0 0 1px #a9d9f3; }
+.candidate-card { border-color: var(--line); border-radius: 11px; box-shadow: 0 3px 12px rgba(31, 104, 150, .04); transition: transform .18s ease, box-shadow .18s ease; }
+.candidate-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(31, 104, 150, .08); }
+.candidate-card > a { border-color: var(--line); border-radius: 9px; }
+.trip-notes { border-color: var(--line); border-radius: 12px; box-shadow: 0 5px 15px rgba(31, 104, 150, .04); }
+.trip-notes summary { padding-inline: 20px; }
+
+.site-footer { color: var(--ink-soft); }
+.meal-day-note { border-left-color: var(--blue-bright); background: #eff8fe; color: var(--ink-soft); }
+.weather-card .weather-notice { border-color: #d8edf9; }
+:focus-visible { outline-color: #168acb; }
+
+@media (max-width: 900px) {
+  .intro-section { padding: 36px 34px 26px; }
+  .intro-grid { grid-template-columns: 1fr; gap: 24px; }
+  .trip-meta { max-width: none; }
+  .map-panel { position: static; }
+  .day-nav { margin-top: 20px; }
+  .itinerary-panel { padding: 23px 21px; }
+  .map { min-height: 420px; }
+}
+@media (max-width: 560px) {
+  .site-header { min-height: 64px; }
+  .intro-section { margin: 18px 0 22px; padding: 27px 20px 20px; border-radius: 18px; }
+  .intro-grid { gap: 18px; margin-top: 15px; }
+  h1 { font-size: clamp(36px, 10vw, 48px); letter-spacing: -.06em; }
+  .intro-copy { margin-top: 9px; font-size: 13px; }
+  .trip-meta { gap: 13px 18px; }
+  .trip-meta strong { font-size: 13px; }
+  .trip-essentials { gap: 8px; margin-top: 22px; }
+  .essential-card { min-height: 88px; padding: 13px 14px; }
+  .workspace { gap: 28px; padding-top: 25px; }
+  .stop-topline { align-items: center; }
+  .stop-duration { font-size: 9px; }
+  .stop-card { padding-right: 74px; }
+  .stop-map-link { top: 8px; right: 8px; }
+  .map-link { min-width: 42px; min-height: 42px; }
+  .itinerary-panel { padding: 19px 14px 21px; border-radius: 15px; }
+  .panel-heading h2, .map-heading h2 { font-size: 21px; }
+  .day-tab { min-width: 0; min-height: 64px; margin: 0; padding: 7px 5px; }
+  .day-tab-label { font-size: 11px; }
+  .day-tabs { gap: 2px; }
+  .map { min-height: 240px; height: 64vw; max-height: 300px; border-radius: 12px; }
+  .map-footer { display: none; }
+  .candidate-section { margin-bottom: 36px; padding: 20px 15px; border-radius: 16px; }
+  .candidate-heading { gap: 15px; }
+  .candidate-heading h2 { font-size: 24px; }
+  .candidate-heading p { max-width: 38ch; font-size: 12px; }
+  .candidate-list { gap: 8px; }
+  .candidate-card { padding: 12px; }
+  .trip-notes { margin-bottom: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .meal-choice, .candidate-card { transition: none; }
+  .meal-choice:hover, .candidate-card:hover { transform: none; }
+}
+
+</style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    
+  </head>
+  <body class="static-site">
+    <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-actions">
+          <span id="save-status" class="save-status" aria-live="polite"></span>
+          <a id="edit-link" class="button button-quiet" href="/?edit=1">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 16.5-.8 3.8 3.8-.8L18.5 8l-2.7-2.7L4 16.5Z"></path><path d="m14.5 6.5 2.7 2.7M4 20.3h4"></path></svg>
+            일정 편집
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <section class="intro-section" aria-labelledby="trip-title">
+        <div class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>DA NANG · 3 NIGHTS · 4 DAYS</div>
+        <div class="intro-grid">
+          <div>
+            <h1 id="trip-title">다낭 <em>3박 4일</em></h1>
+            <p class="intro-copy">11월 19일–22일 · 항공, 숙소, 날짜별 일정과 식사 후보를 한눈에 확인하세요.</p>
+          </div>
+          <div class="trip-meta" aria-label="여행 정보">
+            <div><span>TRIP WINDOW</span><strong id="trip-window">불러오는 중</strong></div>
+            <div><span>STOPS</span><strong id="stop-count">—</strong></div>
+            <div><span>LAST SAVED</span><strong id="last-saved">—</strong></div>
+          </div>
+        </div>
+        <div class="trip-essentials" aria-label="항공과 숙소">
+          <article class="essential-card">
+            <span class="section-kicker">THU · NOV 19 · ARRIVAL</span>
+            <strong>11:10 ICN → 14:15 DAD</strong>
+            <span>대한항공 KE457 · 인천 T2</span>
+          </article>
+          <article class="essential-card">
+            <span class="section-kicker">SUN · NOV 22 · DEPARTURE</span>
+            <strong>15:45 DAD → 22:05 ICN</strong>
+            <span>대한항공 KE458 · 인천 T2</span>
+          </article>
+          <article class="essential-card essential-hotel">
+            <span class="section-kicker">STAY · 3 NIGHTS</span>
+            <strong>Danang Marriott Resort &amp; Spa</strong>
+            <span>07 Truong Sa · +84 (236) 396-8888</span>
+            <a class="map-link" href="https://www.google.com/maps/search/?api=1&amp;query=Danang+Marriott+Resort+%26+Spa%2C+07+Truong+Sa%2C+Da+Nang" target="_blank" rel="noopener noreferrer" aria-label="Danang Marriott Resort 위치 보기">map</a>
+          </article>
+        </div>
+      </section>
+
+      <section id="editor-auth" class="editor-auth hidden" aria-labelledby="auth-title">
+        <div>
+          <span class="section-kicker">EDITOR ACCESS</span>
+          <h2 id="auth-title">편집자 토큰을 입력하세요.</h2>
+          <p>토큰은 이 브라우저의 세션에만 보관되며, 저장할 때만 서버에 전송됩니다.</p>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <label for="editor-token">편집자 토큰</label>
+          <div class="auth-row">
+            <input id="editor-token" name="token" type="password" autocomplete="current-password" required>
+            <button class="button button-dark" type="submit">확인</button>
+          </div>
+          <p id="auth-error" class="form-error" role="alert"></p>
+        </form>
+      </section>
+
+      <section id="editor-toolbar" class="editor-toolbar hidden" aria-label="편집 도구">
+        <div>
+          <span class="section-kicker">EDIT MODE</span>
+          <h2>일정을 다듬어 보세요.</h2>
+          <p>현재 날짜의 항목을 수정하고, 순서를 바꾼 뒤 저장하세요.</p>
+        </div>
+        <div class="toolbar-actions">
+          <button id="add-stop" class="button button-outline" type="button">
+            <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"></path></svg>
+            일정 추가
+          </button>
+          <button id="cancel-edit" class="button button-quiet" type="button">취소</button>
+          <button id="logout-edit" class="button button-quiet" type="button">로그아웃</button>
+          <button id="save-itinerary" class="button button-dark" type="button">변경 저장</button>
+        </div>
+      </section>
+
+      <div id="editor-message" class="editor-message hidden" role="status"></div>
+
+      <nav class="day-nav" aria-label="여행 날짜">
+        <div id="day-tabs" class="day-tabs" role="tablist" aria-label="날짜 선택"></div>
+      </nav>
+
+      <section class="workspace" aria-label="일정과 지도">
+        <section class="itinerary-panel" aria-labelledby="day-heading">
+          <div class="panel-heading">
+            <div>
+              <span class="section-kicker">DAY <span id="day-number">01</span></span>
+              <h2 id="day-heading">일정을 불러오는 중</h2>
+            </div>
+            <span id="day-summary" class="day-summary"></span>
+          </div>
+          <div id="weather-card" class="weather-card" aria-live="polite"></div>
+          <div id="itinerary-list" class="itinerary-list" aria-live="polite"></div>
+          <section class="meal-plan" aria-labelledby="meal-heading">
+            <div class="subsection-heading">
+              <div><span class="section-kicker">MEALS</span><h3 id="meal-heading">오늘의 식사 후보</h3></div>
+              <span class="meal-hint">장소를 고르면 지도 경로가 바뀝니다</span>
+            </div>
+            <div id="meal-list" class="meal-list"></div>
+          </section>
+        </section>
+
+        <section class="map-panel" aria-labelledby="map-heading">
+          <div class="map-heading">
+            <div>
+              <span class="section-kicker">ROUTE PREVIEW</span>
+              <h2 id="map-heading">오늘의 동선</h2>
+            </div>
+            <span id="route-summary" class="route-summary"></span>
+          </div>
+          <div id="map" class="map" role="application" aria-label="선택한 날짜의 여행 경로 지도"></div>
+          <div class="map-footer">
+            <span><span class="legend-dot legend-start" aria-hidden="true"></span> 일정 순서</span>
+            <span><span class="legend-meal" aria-hidden="true">M</span> 식당 후보</span>
+            <span><span class="legend-line" aria-hidden="true"></span> 이동 순서(직선 표시)</span>
+            <span class="map-source">© OpenStreetMap contributors</span>
+          </div>
+        </section>
+      </section>
+
+      <section class="candidate-section" aria-labelledby="candidate-heading">
+        <div class="candidate-heading">
+          <div>
+            <span class="section-kicker">SHORTLIST</span>
+            <h2 id="candidate-heading">여행 후보 모음</h2>
+            <p>원자료와 여행 정보·현지 추천을 모았습니다. 가격과 영업시간은 방문 전 확인하세요.</p>
+          </div>
+          <div id="candidate-tabs" class="candidate-tabs" role="tablist" aria-label="후보 종류"></div>
+        </div>
+        <div id="candidate-list" class="candidate-list" aria-live="polite"></div>
+      </section>
+
+      <details class="trip-notes">
+        <summary>공항 준비 · 픽업 · 커피 주문 메모</summary>
+        <div class="trip-notes-grid">
+          <section>
+            <span class="section-kicker">ICN PARKING</span>
+            <h3>인천공항 출발 전</h3>
+            <p><a href="https://valet.amanopark.co.kr/booking-waitlist" target="_blank" rel="noopener noreferrer">아마노 주차 예약 대기</a></p>
+            <p><a href="https://www.airport.kr/ap_ko/968/subview.do" target="_blank" rel="noopener noreferrer">제2터미널 주차장 현황</a></p>
+          </section>
+          <section>
+            <span class="section-kicker">DAD PICKUP</span>
+            <h3>다낭 공항 픽업</h3>
+            <p>짐을 찾은 뒤 오른쪽 STAR Cafe 앞 · VIP SEDAN</p>
+            <p>Trip.com 픽업 번호: <strong>1400831335271387</strong></p>
+          </section>
+          <section>
+            <span class="section-kicker">VIETNAMESE COFFEE</span>
+            <h3>커피 주문</h3>
+            <p><strong>CA PHE DEN</strong> 블랙 · <strong>CA PHE SUA DA</strong> 연유 아이스</p>
+            <p><strong>CA PHE SUA NONG</strong> 따뜻한 연유 · <strong>CA PHE MUOI</strong> 소금</p>
+            <p><strong>CA PHE DUA</strong> 코코넛 · <strong>BAC XIU</strong> 우유 많은 커피</p>
+            <p>설탕 없이: <strong>KHONG DUONG</strong></p>
+          </section>
+        </div>
+      </details>
+    </main>
+
+    <footer class="site-footer">
+      <p>가격과 영업시간은 방문 전에 확인해 주세요.</p>
+      <span>다낭 · 2026년 11월 19–22일</span>
+    </footer>
+  <script type="application/json" id="itinerary-data">{"itinerary":[{"date":"2026-11-19","startTime":"14:15","title":"다낭 공항 도착 · KE457","location":"Da Nang International Airport","note":"입국·수하물 수령 후 픽업 기사와 만납니다.","durationMinutes":45,"transportToNext":"Trip.com 픽업 차량","travelMinutesToNext":25,"lat":16.0425792,"lng":108.1971613},{"date":"2026-11-19","startTime":"15:25","title":"Marriott 체크인","location":"Danang Marriott Resort & Spa, 07 Truong Sa","note":"호텔에 짐을 풀고 잠시 쉰 뒤 시내로 이동합니다.","durationMinutes":70,"transportToNext":"차량","travelMinutesToNext":25,"lat":16.0073852,"lng":108.266296},{"date":"2026-11-19","startTime":"17:00","title":"한시장 · 핑크성당","location":"Han Market, 119 Tran Phu","note":"상점은 일찍 문을 닫을 수 있어 시장을 먼저 보고, 핑크성당은 도보로 함께 둘러봅니다. 비가 강하거나 지연되면 시장만 짧게 방문합니다.","durationMinutes":65,"transportToNext":"도보","travelMinutesToNext":10,"lat":16.0683525,"lng":108.224283,"sourceUrl":"https://danangfantasticity.com/en/market/han-market"},{"date":"2026-11-19","startTime":"18:15","title":"저녁 · 식당 선택","location":"한시장 주변","mealSlot":"dinner","note":"아래 식당 후보 중 하나를 선택하면 지도 경로와 Google Maps 길찾기에 반영됩니다.","durationMinutes":65,"transportToNext":"도보 또는 차량","travelMinutesToNext":10,"lat":16.0695677,"lng":108.2229792},{"date":"2026-11-19","startTime":"19:30","title":"SPA Field 마사지","location":"SPA Field, Da Nang","note":"90분 코스 예약 후보. 첫날 피로가 크면 마사지는 다음 날로 미룹니다.","durationMinutes":90,"transportToNext":"차량","travelMinutesToNext":20,"lat":16.0677,"lng":108.2223,"sourceUrl":"https://www.spafieldnail.com/"},{"date":"2026-11-19","startTime":"21:20","title":"호텔 복귀","location":"Danang Marriott Resort & Spa","note":"호텔에서 휴식합니다.","durationMinutes":0,"transportToNext":null,"travelMinutesToNext":null,"lat":16.0073852,"lng":108.266296},{"date":"2026-11-20","startTime":"07:30","title":"호텔 조식","location":"Man Ho Restaurant · Danang Marriott","note":"호텔 조식은 매일 06:30–11:00. 아침은 여유 있게 먹고 오전에는 리조트에서 쉽니다.","durationMinutes":90,"transportToNext":"리조트 내","travelMinutesToNext":0,"lat":16.0073852,"lng":108.266296,"sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"date":"2026-11-20","startTime":"09:00","title":"호텔 휴식","location":"Danang Marriott Resort & Spa","note":"비 예보가 있어 수영장·해변 활동은 당일 날씨를 보고 결정합니다.","durationMinutes":120,"transportToNext":"차량","travelMinutesToNext":45,"lat":16.0073852,"lng":108.266296},{"date":"2026-11-20","startTime":"11:30","title":"호이안 이동 · 깜탄","location":"Cam Thanh Coconut Forest, Hoi An","note":"바구니배는 40분 정도. 비·강물 수위·현장 운영이 괜찮을 때만 탑니다. 그렇지 않으면 바로 구시가지로 이동합니다.","durationMinutes":50,"transportToNext":"차량","travelMinutesToNext":20,"lat":15.8552,"lng":108.3618,"sourceUrl":"https://danangfantasticity.com/en/plan-your-da-nang-journey-2026-updated-admission-prices-for-attractions-and-tourist-sites"},{"date":"2026-11-20","startTime":"13:00","title":"점심 · 식당 선택","location":"Hoi An Old Town","mealSlot":"lunch","note":"까오러우·치킨라이스·미꽝 중 고릅니다. 선택하면 지도 경로와 길찾기에 반영됩니다.","durationMinutes":60,"transportToNext":"도보","travelMinutesToNext":15,"lat":15.8816934,"lng":108.3283862},{"date":"2026-11-20","startTime":"14:15","title":"호이안 구시가지 산책","location":"Hoi An Ancient Town","note":"황색 골목과 강변을 걷습니다. 침수나 강한 비가 있으면 강가 산책은 생략합니다.","durationMinutes":75,"transportToNext":"도보","travelMinutesToNext":10,"lat":15.8779509,"lng":108.3239898,"sourceUrl":"https://danangfantasticity.com/en/see-and-do/hoi-an-ancient-town"},{"date":"2026-11-20","startTime":"15:40","title":"Mót Hoi An","location":"150 Tran Phu, Hoi An","note":"레몬그라스와 허브를 넣은 현지 음료를 맛봅니다.","durationMinutes":25,"transportToNext":"도보","travelMinutesToNext":8,"lat":15.8771565,"lng":108.3272915},{"date":"2026-11-20","startTime":"16:15","title":"Faifo Coffee","location":"130 Tran Phu, Hoi An","note":"루프탑 전망을 봅니다. 비가 강하면 실내 좌석을 이용합니다.","durationMinutes":45,"transportToNext":"도보","travelMinutesToNext":10,"lat":15.8772268,"lng":108.3281267,"sourceUrl":"https://danangfantasticity.com/en/see-and-do/hoi-an-ancient-town"},{"date":"2026-11-20","startTime":"17:15","title":"저녁 · 식당 선택","location":"Hoi An Old Town","mealSlot":"dinner","note":"호이안 지역 음식, 화이트로즈 만두 또는 반미 후보 중 고릅니다.","durationMinutes":70,"transportToNext":"도보","travelMinutesToNext":10,"lat":15.8766175,"lng":108.3276628},{"date":"2026-11-20","startTime":"18:35","title":"야시장 · 등불배 선택","location":"Nguyen Hoang Night Market, Hoi An","note":"등불배는 비와 강물 수위를 현장에서 확인한 뒤 선택합니다. 운행하지 않으면 야시장과 실내 카페 위주로 보냅니다.","durationMinutes":90,"transportToNext":"차량","travelMinutesToNext":45,"lat":15.8769,"lng":108.3269,"sourceUrl":"https://danangfantasticity.com/en/see-and-do/hoi-an-ancient-town"},{"date":"2026-11-20","startTime":"20:50","title":"호텔 복귀","location":"Danang Marriott Resort & Spa","note":"교통 상황에 따라 이동 시간은 달라질 수 있습니다.","durationMinutes":0,"transportToNext":null,"travelMinutesToNext":null,"lat":16.0073852,"lng":108.266296},{"date":"2026-11-21","startTime":"07:30","title":"호텔 조식","location":"Man Ho Restaurant · Danang Marriott","note":"호텔 조식은 매일 06:30–11:00.","durationMinutes":90,"transportToNext":"차량","travelMinutesToNext":10,"lat":16.0073852,"lng":108.266296,"sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"date":"2026-11-21","startTime":"09:10","title":"오행산 · 암푸동굴","location":"Marble Mountains, Da Nang","note":"보통 2–3시간. 오늘 예보는 강한 비이므로 계단과 동굴 입구가 젖었거나 미끄러우면 취소하고 참 조각 박물관으로 바꿉니다.","durationMinutes":150,"transportToNext":"차량","travelMinutesToNext":10,"lat":16.00402,"lng":108.2627745,"sourceUrl":"https://danangfantasticity.com/en/heritage-landscape/the-marble-mountains"},{"date":"2026-11-21","startTime":"12:00","title":"점심 · 호텔 식당 선택","location":"Danang Marriott Resort & Spa","mealSlot":"lunch","note":"오행산에서 돌아와 호텔 식당 중 한 곳을 고릅니다. 호텔로 바로 이동할 수 있습니다.","durationMinutes":60,"transportToNext":"도보","travelMinutesToNext":0,"lat":16.0073852,"lng":108.266296,"sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"date":"2026-11-21","startTime":"13:10","title":"호텔 휴식","location":"Danang Marriott Resort & Spa","note":"저녁 외출 전 휴식합니다. 비가 이어지면 외출 시간을 줄입니다.","durationMinutes":240,"transportToNext":"차량","travelMinutesToNext":25,"lat":16.0073852,"lng":108.266296},{"date":"2026-11-21","startTime":"17:35","title":"저녁 · 해산물 식당 선택","location":"My Khe Beach area, Da Nang","mealSlot":"dinner","note":"해산물 후보 중 선택합니다. 주문 전 메뉴와 중량별 가격을 확인하세요.","durationMinutes":90,"transportToNext":"차량 또는 도보","travelMinutesToNext":20,"lat":16.0640292,"lng":108.2415578},{"date":"2026-11-21","startTime":"19:45","title":"썬짜 야시장","location":"Son Tra Night Market, Da Nang","note":"비가 강하면 건너뛰고 용다리 주변으로 이동합니다.","durationMinutes":45,"transportToNext":"도보","travelMinutesToNext":10,"lat":16.0607228,"lng":108.2315158},{"date":"2026-11-21","startTime":"20:45","title":"용다리 주말 쇼","location":"Dragon Bridge, Da Nang","note":"관광 포털 안내는 주말 21:00 불·물 쇼입니다. 우비를 준비하고 운영 여부를 당일 확인합니다.","durationMinutes":40,"transportToNext":"차량","travelMinutesToNext":25,"lat":16.0611682,"lng":108.2278968,"sourceUrl":"https://danangfantasticity.com/cn/hint-where-should-we-go-in-da-nang-at-night"},{"date":"2026-11-21","startTime":"21:50","title":"호텔 복귀","location":"Danang Marriott Resort & Spa","note":"교통 상황에 따라 이동 시간은 달라질 수 있습니다.","durationMinutes":0,"transportToNext":null,"travelMinutesToNext":null,"lat":16.0073852,"lng":108.266296},{"date":"2026-11-22","startTime":"07:30","title":"호텔 조식","location":"Man Ho Restaurant · Danang Marriott","note":"호텔 조식은 매일 06:30–11:00.","durationMinutes":90,"transportToNext":"리조트 내","travelMinutesToNext":0,"lat":16.0073852,"lng":108.266296,"sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"date":"2026-11-22","startTime":"09:00","title":"리조트 휴식 · 체크아웃","location":"Danang Marriott Resort & Spa","note":"체크아웃 후 짐을 맡기고 13:00 공항으로 출발합니다.","durationMinutes":150,"transportToNext":"리조트 내","travelMinutesToNext":0,"lat":16.0073852,"lng":108.266296},{"date":"2026-11-22","startTime":"11:30","title":"점심 · 호텔 식당 선택","location":"Danang Marriott Resort & Spa","mealSlot":"lunch","note":"13시 공항 출발 전 호텔 식당에서 식사합니다. 주문 후 이동 시간을 남겨두세요.","durationMinutes":60,"transportToNext":"공항 픽업 차량","travelMinutesToNext":45,"lat":16.0073852,"lng":108.266296,"sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"date":"2026-11-22","startTime":"13:00","title":"다낭 공항 이동 · KE458","location":"Da Nang International Airport","note":"공항에 여유 있게 도착한 뒤 15:45 KE458로 인천에 출발합니다.","durationMinutes":105,"transportToNext":null,"travelMinutesToNext":null,"lat":16.0425792,"lng":108.1971613}],"updatedAt":"2026-11-17T13:30:04.454Z"}</script>
+<script type="application/json" id="trip-info-data">{"weather":[{"date":"2026-11-19","high":29,"low":24,"summary":"구름 많고 뇌우","advice":"시장 방문은 짧게, 우비를 준비하세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"},{"date":"2026-11-20","high":28,"low":24,"summary":"구름 많고 보통 비","advice":"바구니배·등불배는 비와 강 수위를 현장에서 확인한 뒤 결정하세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"},{"date":"2026-11-21","high":29,"low":24,"summary":"구름 많고 강한 비","advice":"오행산 계단이 젖거나 미끄러우면 참 조각 박물관으로 바꾸세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"},{"date":"2026-11-22","high":30,"low":24,"summary":"소나기와 뇌우","advice":"13시 공항 이동에 여유를 두고 최신 예보를 확인하세요.","sourceUrl":"https://nchmf.gov.vn/KttvsiteE/en-US/2/da-nang-w55.html"}],"weatherCheckedAt":"2026-11-17","weatherNotice":"다낭 기상수문청은 11월 19–22일 일부 지역의 중·강한 비와 뇌우, 도시 저지대 침수 가능성을 알렸습니다. 야외·수상 활동은 당일 운영 여부를 확인하세요.","weatherNoticeUrl":"https://pctt.danang.gov.vn/Portals/0/DNAN_DIEM_20261114_1530%20%281%29.pdf","meals":[{"date":"2026-11-19","meal":"dinner","label":"저녁","time":"18:15","area":"한시장 근처","choices":[{"id":"phu-hong","title":"Quán Phú Hồng","location":"19 Yen Bai, Da Nang","dish":"넴느엉·넴루이","note":"한시장 북쪽. 넴느엉과 넴루이를 나눠 먹기 좋습니다.","lat":16.0695677,"lng":108.2229792,"mapsQuery":"Quán Phú Hồng, 19 Yen Bai, Da Nang","mapsUrl":"https://maps.app.goo.gl/NP8T3wth1GdkbmjK6","sourceUrl":"https://maps.app.goo.gl/NP8T3wth1GdkbmjK6"},{"id":"bun-cha-ha-noi","title":"Chao Ba Bun Cha Ha Noi","location":"한시장 남쪽, Da Nang","dish":"분짜","note":"핑크성당과 함께 보기 좋은 시내 식당 후보입니다.","lat":16.0669,"lng":108.2223,"mapsQuery":"Chao Ba Bun Cha Ha Noi, Da Nang"},{"id":"banh-mi-co-tien","title":"Banh Mi Co Tien","location":"한시장 주변, Da Nang","dish":"반미","note":"시장 방문 전후 가볍게 먹기 좋습니다.","lat":16.0678,"lng":108.224,"mapsQuery":"Banh Mi Co Tien, Da Nang"}]},{"date":"2026-11-20","meal":"lunch","label":"점심","time":"13:00","area":"호이안 구시가지","choices":[{"id":"cao-lau-thanh","title":"Cao Lầu Thanh","location":"26 Thai Phien, Hoi An","dish":"까오러우","note":"수제 면과 돼지고기, 허브를 곁들이는 호이안 대표 면 요리입니다.","lat":15.8816934,"lng":108.3283862,"mapsQuery":"Cao Lau Thanh, 26 Thai Phien, Hoi An","sourceUrl":"https://www.vietnamairlines.com/go/vi/plan-book/travel/travel-guide/cao-lau-hoi-an"},{"id":"com-ga-ba-buoi","title":"Cơm Gà Bà Buội","location":"22 Phan Chu Trinh, Hoi An","dish":"호이안 치킨라이스","note":"닭 육수로 지은 노란 밥과 잘게 찢은 닭고기를 곁들입니다.","lat":15.8788,"lng":108.3274,"mapsQuery":"Cơm Gà Bà Buội, 22 Phan Chu Trinh, Hoi An","sourceUrl":"https://visitdanang.travel/vi/kham-pha-com-ga-hoi-an-bieu-tuong-am-thuc-pho-co-12978"},{"id":"mi-quang-92","title":"Mì Quảng 92","location":"Hoi An Old Town","dish":"미꽝","note":"돼지고기·새우 외에 생선이나 소고기 미꽝도 추천된 식당입니다.","lat":15.8777,"lng":108.3258,"mapsQuery":"Mi Quang 92, Hoi An","sourceUrl":"https://danangfantasticity.com/en/time-out-suggests-12-local-loved-places-to-eat-and-drink-in-hoi-an"}]},{"date":"2026-11-20","meal":"dinner","label":"저녁","time":"17:15","area":"호이안 구시가지","choices":[{"id":"morning-glory","title":"Morning Glory Original","location":"106 Nguyen Thai Hoc, Hoi An","dish":"까오러우·화이트로즈 등 호이안 음식","note":"지역 음식을 한 자리에서 고르기 좋은 식당입니다.","lat":15.8766175,"lng":108.3276628,"mapsQuery":"Morning Glory Original, 106 Nguyen Thai Hoc, Hoi An","sourceUrl":"https://beta.tastevietnam.asia/venue/morning-glory-original"},{"id":"white-rose","title":"White Rose Restaurant","location":"533 Hai Ba Trung, Hoi An","dish":"화이트로즈 만두·튀긴 완탕","note":"화이트로즈 만두를 만든 가족 식당으로 소개됩니다.","lat":15.8829593,"lng":108.3250054,"mapsQuery":"White Rose Restaurant, 533 Hai Ba Trung, Hoi An","sourceUrl":"https://danangfantasticity.com/en/news/one-day-hoi-an-food-tour-taste-the-ancient-town-like-a-local"},{"id":"mango-rooms","title":"Mango Rooms","location":"Hoai River riverside, Hoi An","dish":"베트남·동남아 퓨전 요리","note":"강변 분위기와 퓨전 메뉴를 원할 때 고르는 대안입니다.","lat":15.8768,"lng":108.3261,"mapsQuery":"Mango Rooms Hoi An","sourceUrl":"https://danangfantasticity.com/en/time-out-suggests-12-local-loved-places-to-eat-and-drink-in-hoi-an"}]},{"date":"2026-11-21","meal":"lunch","label":"점심","time":"12:00","area":"오행산·리조트 주변","choices":[{"id":"man-ho-lunch","title":"Man Ho Restaurant","location":"Danang Marriott Resort & Spa","dish":"호텔 조식·현지식 및 인터내셔널 메뉴","note":"오행산에서 호텔로 돌아온 뒤 편하게 식사할 수 있습니다.","lat":16.0073852,"lng":108.266296,"mapsQuery":"Man Ho Restaurant, Danang Marriott Resort and Spa","sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"id":"beach-house-lunch","title":"Beach House","location":"Danang Marriott Resort & Spa","dish":"해산물·현지식 및 인터내셔널 메뉴","note":"바닷가 쪽 좌석이 있는 호텔 식당입니다.","lat":16.0076,"lng":108.2668,"mapsQuery":"Beach House Restaurant, Danang Marriott Resort and Spa","sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"id":"mi-quang-ba-muoi","title":"Quán Mì Quảng Bà Mười","location":"Ngũ Hành Sơn, Da Nang","dish":"미꽝","note":"오행산 주변에서 찾을 수 있는 로컬 면 요리 대안입니다.","lat":16.0122,"lng":108.2558,"mapsQuery":"Quán Mì Quảng Bà Mười, Ngu Hanh Son, Da Nang"}]},{"date":"2026-11-21","meal":"dinner","label":"저녁","time":"17:35","area":"미케비치·안하이 주변","choices":[{"id":"moc-quan","title":"Mộc Quán Seafood","location":"26 To Hien Thanh, Da Nang","dish":"해산물","note":"사용자가 적어 둔 해산물 식당 후보입니다. 주문 전 중량과 가격을 확인하세요.","lat":16.0640292,"lng":108.2415578,"mapsQuery":"Mộc Quán Seafood, 26 To Hien Thanh, Da Nang","mapsUrl":"https://maps.app.goo.gl/pSoEQy1ArzQfQWzz7","sourceUrl":"https://maps.app.goo.gl/pSoEQy1ArzQfQWzz7"},{"id":"zo-zo-seafood","title":"Zô Zô Seafood","location":"Da Nang","dish":"해산물","note":"사용자가 적어 둔 해산물 식당 후보입니다. 메뉴·중량별 가격을 확인하세요.","lat":16.0570085,"lng":108.2451723,"mapsQuery":"Zô Zô Seafood, Da Nang","mapsUrl":"https://maps.app.goo.gl/1MdrRmtMj8DCYSrz6","sourceUrl":"https://maps.app.goo.gl/1MdrRmtMj8DCYSrz6"},{"id":"hai-san-phui","title":"Hải Sản Phúi","location":"My Khe north, Da Nang","dish":"저렴한 해산물","note":"사용자 원자료의 가성비 해산물 후보입니다. 메뉴와 영업 여부를 방문 전에 확인하세요.","lat":16.0746326,"lng":108.2430922,"mapsQuery":"Hải Sản Phúi seafood, Da Nang","mapsUrl":"https://maps.app.goo.gl/caC9dWdNAHoJxkbx6","sourceUrl":"https://maps.app.goo.gl/caC9dWdNAHoJxkbx6"}]},{"date":"2026-11-22","meal":"lunch","label":"점심","time":"11:30","area":"Marriott 리조트","choices":[{"id":"beach-house-last-day","title":"Beach House","location":"Danang Marriott Resort & Spa","dish":"해산물·현지식 및 인터내셔널 메뉴","note":"호텔에서 식사 후 13시에 공항으로 출발합니다.","lat":16.0076,"lng":108.2668,"mapsQuery":"Beach House Restaurant, Danang Marriott Resort and Spa","sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"id":"man-ho-last-day","title":"Man Ho Restaurant","location":"Danang Marriott Resort & Spa","dish":"현지식 및 인터내셔널 메뉴","note":"호텔에서 식사 후 13시에 공항으로 출발합니다.","lat":16.0073852,"lng":108.266296,"mapsQuery":"Man Ho Restaurant, Danang Marriott Resort and Spa","sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"}]}],"candidates":[{"category":"food","title":"Quán Phú Hồng","location":"19 Yen Bai, Da Nang","description":"넴느엉·넴루이. 한시장 북쪽.","mapsQuery":"Quán Phú Hồng, 19 Yen Bai, Da Nang","sourceUrl":"https://maps.app.goo.gl/NP8T3wth1GdkbmjK6"},{"category":"food","title":"Chao Ba Bun Cha Ha Noi","location":"한시장 남쪽, Da Nang","description":"분짜.","mapsQuery":"Chao Ba Bun Cha Ha Noi, Da Nang"},{"category":"food","title":"Banh Mi Co Tien","location":"한시장 주변, Da Nang","description":"반미.","mapsQuery":"Banh Mi Co Tien, Da Nang"},{"category":"food","title":"Cơm Tấm Đầy","location":"한시장 주변, Da Nang","description":"껌땀·넴루이.","mapsQuery":"Com Tam Day Da Nang"},{"category":"food","title":"Mộc Quán Seafood","location":"26 To Hien Thanh, Da Nang","description":"해산물. 메뉴와 중량별 가격을 확인하세요.","mapsQuery":"Mộc Quán Seafood, 26 To Hien Thanh, Da Nang","sourceUrl":"https://maps.app.goo.gl/pSoEQy1ArzQfQWzz7"},{"category":"food","title":"Zô Zô Seafood","location":"Da Nang","description":"미케비치 근처 해산물 후보.","mapsQuery":"Zô Zô Seafood, Da Nang","sourceUrl":"https://maps.app.goo.gl/1MdrRmtMj8DCYSrz6"},{"category":"food","title":"Làng Chài Seafood","location":"Da Nang","description":"사용자 원자료의 해산물 후보.","mapsQuery":"Lang Chai Seafood Da Nang"},{"category":"food","title":"Hải Sản Phúi","location":"미케비치 북쪽, Da Nang","description":"사용자 원자료의 저렴한 해산물 후보.","mapsQuery":"Hải Sản Phúi seafood, Da Nang","sourceUrl":"https://maps.app.goo.gl/caC9dWdNAHoJxkbx6"},{"category":"food","title":"Nhắng Nướng","location":"Da Nang","description":"로컬 화로구이.","mapsQuery":"Nhang Nuong Da Nang","sourceUrl":"https://maps.app.goo.gl/H3BiaS5LKoFwrr7e7"},{"category":"food","title":"Bánh Xèo Bà Dưỡng","location":"280/23 Hoang Dieu, Da Nang","description":"미슐랭 가이드 추천. 바삭한 반쎄오와 구운 돼지고기 꼬치.","mapsQuery":"Banh Xeo Ba Duong, 280 Hoang Dieu, Da Nang","sourceUrl":"https://guide.michelin.com/no/en/da-nang-region/da-nang_2984390/restaurant/banh-xeo-ba-duong"},{"category":"food","title":"Mỳ Quảng Sứa Hồng Vân","location":"59 Le Hong Phong, Da Nang","description":"미꽝 전문점 후보. 해파리 미꽝으로 알려져 있습니다.","mapsQuery":"My Quang Sua Hong Van, 59 Le Hong Phong, Da Nang","sourceUrl":"https://guide.michelin.com/vn/en/da-nang-region/restaurants"},{"category":"food","title":"Bún Chả Cá Hờn","location":"113/03 Nguyen Chi Thanh, Da Nang","description":"미슐랭 가이드 추천. 생선살·게살 어묵을 올린 분짜까.","mapsQuery":"Bun Cha Ca Hon, 113/03 Nguyen Chi Thanh, Da Nang","sourceUrl":"https://guide.michelin.com/gb/en/da-nang-region/da-nang_2984390/restaurant/bun-cha-ca-hon"},{"category":"food","title":"Mì Quảng Bà Ngân","location":"108 Dong Da, Da Nang","description":"현지 여행자 커뮤니티에서 추천한 미꽝 후보.","mapsQuery":"Mi Quang Ba Ngan, 108 Dong Da, Da Nang","sourceUrl":"https://www.reddit.com/r/DaNang/comments/1p172gs/mi_quang_on_da_nang/"},{"category":"food","title":"Cao Lầu Thanh","location":"26 Thai Phien, Hoi An","description":"수제 면과 돼지고기를 곁들인 까오러우.","mapsQuery":"Cao Lau Thanh, 26 Thai Phien, Hoi An","sourceUrl":"https://www.vietnamairlines.com/go/vi/plan-book/travel/travel-guide/cao-lau-hoi-an"},{"category":"food","title":"Cơm Gà Bà Buội","location":"22 Phan Chu Trinh, Hoi An","description":"닭 육수로 지은 노란 밥과 찢은 닭고기.","mapsQuery":"Com Ga Ba Buoi, 22 Phan Chu Trinh, Hoi An","sourceUrl":"https://visitdanang.travel/vi/kham-pha-com-ga-hoi-an-bieu-tuong-am-thuc-pho-co-12978"},{"category":"food","title":"Mót Hoi An","location":"150 Tran Phu, Hoi An","description":"레몬그라스와 허브를 넣은 현지 음료.","mapsQuery":"Mot Hoi An, 150 Tran Phu"},{"category":"food","title":"Faifo Coffee","location":"130 Tran Phu, Hoi An","description":"구시가지 루프탑 커피 후보. 우천 시 실내 좌석을 이용하세요.","mapsQuery":"Faifo Coffee, 130 Tran Phu, Hoi An"},{"category":"food","title":"White Rose Restaurant","location":"533 Hai Ba Trung, Hoi An","description":"화이트로즈 만두와 튀긴 완탕.","mapsQuery":"White Rose Restaurant, 533 Hai Ba Trung, Hoi An","sourceUrl":"https://danangfantasticity.com/en/news/one-day-hoi-an-food-tour-taste-the-ancient-town-like-a-local"},{"category":"food","title":"Morning Glory Original","location":"106 Nguyen Thai Hoc, Hoi An","description":"호이안 스트리트푸드와 지역 음식.","mapsQuery":"Morning Glory Original, 106 Nguyen Thai Hoc, Hoi An","sourceUrl":"https://beta.tastevietnam.asia/venue/morning-glory-original"},{"category":"food","title":"Bánh Mì Phượng","location":"Hoi An Old Town","description":"호이안 반미.","mapsQuery":"Banh Mi Phuong Hoi An"},{"category":"food","title":"Mango Rooms","location":"Hoai River riverside, Hoi An","description":"강변에서 즐기는 베트남·동남아 퓨전 요리.","mapsQuery":"Mango Rooms Hoi An","sourceUrl":"https://danangfantasticity.com/en/time-out-suggests-12-local-loved-places-to-eat-and-drink-in-hoi-an"},{"category":"food","title":"Man Ho Restaurant","location":"Danang Marriott Resort & Spa","description":"호텔 조식과 현지식·인터내셔널 메뉴.","mapsQuery":"Man Ho Restaurant, Danang Marriott Resort and Spa","sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"category":"food","title":"Beach House","location":"Danang Marriott Resort & Spa","description":"현지식·인터내셔널 메뉴와 해산물.","mapsQuery":"Beach House Restaurant, Danang Marriott Resort and Spa","sourceUrl":"https://www.marriott.com/en-us/hotels/dadnn-danang-marriott-resort-and-spa-non-nuoc-beach-villas/dining/"},{"category":"food","title":"Quán Mì Quảng Bà Mười","location":"Ngũ Hành Sơn, Da Nang","description":"오행산 주변 미꽝 식사 후보.","mapsQuery":"Quan Mi Quang Ba Muoi, Ngu Hanh Son, Da Nang"},{"category":"activity","title":"Hàn Market · 핑크성당","location":"Da Nang city centre","description":"첫날 저녁에 방문. 한시장 가게들은 일찍 닫을 수 있습니다.","mapsQuery":"Han Market Da Nang"},{"category":"activity","title":"호이안 구시가지","location":"Hoi An","description":"골목 산책, 루프탑 카페, 야시장. 구시가지 산책은 자유지만 유적 실내 입장권은 별도입니다.","mapsQuery":"Hoi An Ancient Town"},{"category":"activity","title":"깜탄 바구니배","location":"Cam Thanh Coconut Forest, Hoi An","description":"약 40분. 11월 20일은 비·수위를 확인하고 운영할 때만 권합니다.","mapsQuery":"Cam Thanh Coconut Forest Hoi An","sourceUrl":"https://danangfantasticity.com/en/plan-your-da-nang-journey-2026-updated-admission-prices-for-attractions-and-tourist-sites"},{"category":"activity","title":"호아이강 등불배","location":"Hoi An riverside","description":"비·강 수위·현장 운영을 확인한 뒤 이용하세요.","mapsQuery":"Hoi An lantern boat ticket"},{"category":"activity","title":"오행산 · 암푸동굴","location":"Ngu Hanh Son, Da Nang","description":"공식 관광 포털 기준 각각 운영시간 07:00–17:00. 비가 오면 계단이 미끄러울 수 있습니다.","mapsQuery":"Marble Mountains and Am Phu Cave Da Nang","sourceUrl":"https://danangfantasticity.com/en/heritage-landscape/the-marble-mountains"},{"category":"activity","title":"참 조각 박물관","location":"02 2 Thang 9, Da Nang","description":"강한 비나 오행산 우천 대안. 공식 관광 포털 기준 07:30–17:00.","mapsQuery":"Museum of Cham Sculpture Da Nang","sourceUrl":"https://danangfantasticity.com/en/overview-da-nang-museum-of-cham-sculpture"},{"category":"activity","title":"썬짜 야시장 · 용다리","location":"Da Nang","description":"토요일 21:00 주말 쇼 안내. 비가 강하면 야시장은 생략하고 당일 운영을 확인하세요.","mapsQuery":"Son Tra Night Market and Dragon Bridge Da Nang","sourceUrl":"https://danangfantasticity.com/cn/hint-where-should-we-go-in-da-nang-at-night"},{"category":"massage","title":"SPA Field","location":"Han Market area, Da Nang","description":"입력자료 평점 4.4. 시그니처 90분 550,000동, 핫스톤 90분 490,000동. 팁 포함, 음료 제공.","mapsQuery":"SPA Field Da Nang","sourceUrl":"https://www.spafieldnail.com/"},{"category":"massage","title":"OHIO SPA","location":"Da Nang","description":"입력자료 평점 4.9. 시그니처 90분 490,000동, 핫스톤 90분 450,000동.","mapsQuery":"OHIO SPA Da Nang"},{"category":"massage","title":"CASA SPA","location":"Da Nang","description":"입력자료 평점 4.9. 오일 90분 440,000동, 아로마 90분 520,000동.","mapsQuery":"CASA SPA Da Nang"},{"category":"massage","title":"PAM SPA","location":"Da Nang","description":"입력자료 평점 4.9. 핫스톤 90분 480,000동, 4핸드 90분 850,000동. 팁 포함.","mapsQuery":"PAM SPA Da Nang","sourceUrl":"https://maps.app.goo.gl/wCLLuoM45NJBm9hc7"},{"category":"massage","title":"The Hill Spa","location":"Da Nang","description":"한시장 근처 마사지 후보. 코스와 영업시간은 방문 전 확인하세요.","mapsQuery":"The Hill Spa Da Nang"},{"category":"massage","title":"Heaven SPA","location":"My Khe Beach area, Da Nang","description":"입력자료 평점 4.8. 90분 350,000동(브이몽 구독자), 팁 포함.","mapsQuery":"Heaven SPA Da Nang","sourceUrl":"https://maps.app.goo.gl/mZ5Yif6ZsMN2Uv3x9"}],"candidateTabs":[{"id":"food","label":"맛집·카페"},{"id":"activity","label":"액티비티"},{"id":"massage","label":"마사지"}]}</script>
+<script>
+(() => {
+  const params = new URLSearchParams(window.location.search);
+  const staticSite = document.body.classList.contains('static-site');
+  const editMode = !staticSite && params.get('edit') === '1';
+  const TOKEN_KEY = 'wanderboard-editor-token';
+  const state = { itinerary: [], tripInfo: null, selectedMeals: {}, candidateCategory: 'food', updatedAt: null, activeDate: null, activeId: null, authorized: false, saving: false };
+  let map;
+  let markersLayer;
+  let mealMarkersLayer;
+  let routeLayer;
+
+  const $ = (selector) => document.querySelector(selector);
+  const els = {
+    dayTabs: $('#day-tabs'), list: $('#itinerary-list'), dayHeading: $('#day-heading'), dayNumber: $('#day-number'), daySummary: $('#day-summary'),
+    routeSummary: $('#route-summary'), map: $('#map'), tripWindow: $('#trip-window'), stopCount: $('#stop-count'), lastSaved: $('#last-saved'),
+    saveStatus: $('#save-status'), editLink: $('#edit-link'), auth: $('#editor-auth'), authForm: $('#auth-form'), authToken: $('#editor-token'), authError: $('#auth-error'),
+    weather: $('#weather-card'), meals: $('#meal-list'), candidateTabs: $('#candidate-tabs'), candidates: $('#candidate-list'),
+    toolbar: $('#editor-toolbar'), editorMessage: $('#editor-message'), addStop: $('#add-stop'), cancelEdit: $('#cancel-edit'), logout: $('#logout-edit'), save: $('#save-itinerary'),
+  };
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[char]));
+  const dates = () => [...new Set(state.itinerary.map((item) => item.date))].sort();
+  const itemsForDate = (date) => state.itinerary.filter((item) => item.date === date);
+  const mealGroupsForDate = (date) => (state.tripInfo?.meals || []).filter((group) => group.date === date);
+  const selectedChoice = (group) => group.choices.find((choice) => choice.id === state.selectedMeals[`${group.date}:${group.meal}`]) || group.choices[0];
+  const mapsLocation = (item) => {
+    const query = Number.isFinite(item.lat) && Number.isFinite(item.lng) ? `${item.lat},${item.lng}` : item.mapsQuery || item.location || item.title;
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  };
+  const displayItemsForDate = (date) => itemsForDate(date).map((item) => {
+    if (!item.mealSlot) return item;
+    const group = mealGroupsForDate(date).find((entry) => entry.meal === item.mealSlot);
+    const choice = group && selectedChoice(group);
+    return choice ? { ...item, title: `${group.label} · ${choice.title}`, location: choice.location, note: `${choice.dish} · ${choice.note}`, lat: choice.lat, lng: choice.lng, mapsQuery: choice.mapsQuery, sourceUrl: choice.sourceUrl || choice.mapsUrl || item.sourceUrl } : item;
+  });
+  const formatDay = (date) => new Intl.DateTimeFormat('ko-KR', { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date(`${date}T00:00:00`));
+  const formatLongDay = (date) => new Intl.DateTimeFormat('ko-KR', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date(`${date}T00:00:00`));
+  const formatSaved = (date) => date ? new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(date)) : '—';
+  const durationLabel = (minutes) => minutes >= 60 ? `${Math.floor(minutes / 60)}시간${minutes % 60 ? ` ${minutes % 60}분` : ''}` : `${minutes}분`;
+  const getToken = () => { try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; } };
+  const setToken = (token) => { try { sessionStorage.setItem(TOKEN_KEY, token); } catch {} };
+  const clearToken = () => { try { sessionStorage.removeItem(TOKEN_KEY); } catch {} };
+
+  function initMap() {
+    if (!window.L) {
+      els.map.innerHTML = '<div class="map-fallback"><div><strong>지도 타일을 불러오지 못했습니다.</strong><span>일정 목록과 좌표 정보는 계속 확인할 수 있습니다.</span></div></div>';
+      return;
+    }
+    map = L.map(els.map, { zoomControl: false, scrollWheelZoom: false, preferCanvas: true });
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    markersLayer = L.layerGroup().addTo(map);
+    mealMarkersLayer = L.layerGroup().addTo(map);
+    routeLayer = L.layerGroup().addTo(map);
+  }
+
+  function renderHeader() {
+    const dayList = dates();
+    if (!state.activeDate || !dayList.includes(state.activeDate)) state.activeDate = dayList[0];
+    els.tripWindow.textContent = dayList.length ? `${formatDay(dayList[0])} — ${formatDay(dayList.at(-1))}` : '일정 없음';
+    els.stopCount.textContent = `${state.itinerary.length}개 일정`;
+    els.lastSaved.textContent = formatSaved(state.updatedAt);
+    els.saveStatus.textContent = state.authorized ? '편집 권한' : state.updatedAt ? `저장 ${formatSaved(state.updatedAt)}` : '';
+    els.editLink.textContent = state.authorized ? '읽기 화면' : '일정 편집';
+    els.editLink.href = state.authorized ? '/' : '/?edit=1';
+    els.editLink.prepend(Object.assign(document.createElement('span'), { className: 'button-icon', innerHTML: '<svg aria-hidden="true" viewBox="0 0 24 24"><path d="m4 16.5-.8 3.8 3.8-.8L18.5 8l-2.7-2.7L4 16.5Z"></path><path d="m14.5 6.5 2.7 2.7M4 20.3h4"></path></svg>' }));
+  }
+
+  function renderDayTabs() {
+    els.dayTabs.innerHTML = dates().map((date, index) => {
+      const count = itemsForDate(date).length;
+      return `<button class="day-tab" type="button" role="tab" aria-selected="${date === state.activeDate}" aria-controls="itinerary-list" data-date="${date}">
+        <span class="day-tab-number">0${index + 1}</span><span><span class="day-tab-label">${escapeHtml(formatDay(date))}</span><span class="day-tab-sub">${count}개 일정</span></span>
+      </button>`;
+    }).join('');
+    els.dayTabs.querySelectorAll('.day-tab').forEach((tab) => tab.addEventListener('click', () => {
+      state.activeDate = tab.dataset.date;
+      state.activeId = null;
+      render();
+    }));
+  }
+
+  function renderReadList(items) {
+    if (!items.length) return '<div class="editor-empty">이 날짜에는 아직 일정이 없습니다.</div>';
+    return items.map((item, index) => `<div class="stop-row">
+      <time class="stop-time" datetime="${item.date}T${item.startTime}">${escapeHtml(item.startTime)}</time>
+      <button class="stop-card ${item.id === state.activeId ? 'is-active' : ''}" type="button" aria-pressed="${item.id === state.activeId}" data-stop-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.title)} 지도에서 선택">
+        <span class="stop-topline"><span class="stop-title">${escapeHtml(item.title)}</span><span class="stop-duration">${durationLabel(item.durationMinutes)}</span></span>
+        <span class="stop-location">${escapeHtml(item.location)}</span>
+        ${item.note ? `<span class="stop-note">${escapeHtml(item.note)}</span>` : ''}
+      </button>
+      <a class="map-link stop-map-link" href="${escapeHtml(mapsLocation(item))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.title)} Google Maps 위치 보기">map</a>
+    </div>${index < items.length - 1 ? `<div class="transport-row"><span>${escapeHtml(item.travelMinutesToNext)}분 예상</span><span class="transport-mode">${escapeHtml(item.transportToNext)}</span><span>다음 장소까지</span></div>` : ''}`).join('');
+  }
+
+  function renderEditorList(items) {
+    if (!items.length) return '<div class="editor-empty">일정을 추가해 주세요.</div>';
+    return `<div class="editor-list">${items.map((item, index) => `<form class="editor-card" data-editor-id="${escapeHtml(item.id)}">
+      <div class="editor-card-grid">
+        <div class="editor-field"><label for="date-${item.id}">날짜</label><input id="date-${item.id}" data-field="date" type="date" value="${escapeHtml(item.date)}" required></div>
+        <div class="editor-field"><label for="time-${item.id}">시작</label><input id="time-${item.id}" data-field="startTime" type="time" value="${escapeHtml(item.startTime)}" required></div>
+        <div class="editor-field"><label for="duration-${item.id}">체류(분)</label><input id="duration-${item.id}" data-field="durationMinutes" type="number" min="0" step="1" value="${escapeHtml(item.durationMinutes)}" required></div>
+        <div class="editor-field editor-field-wide"><label for="title-${item.id}">일정 제목</label><input id="title-${item.id}" data-field="title" type="text" value="${escapeHtml(item.title)}" required></div>
+        <div class="editor-field editor-field-wide"><label for="location-${item.id}">장소</label><input id="location-${item.id}" data-field="location" type="text" value="${escapeHtml(item.location)}" required></div>
+        <div class="editor-field editor-field-wide"><label for="note-${item.id}">메모</label><textarea id="note-${item.id}" data-field="note" rows="2">${escapeHtml(item.note)}</textarea></div>
+        <div class="editor-field"><label for="lat-${item.id}">위도</label><input id="lat-${item.id}" data-field="lat" type="number" step="any" value="${escapeHtml(item.lat)}" required></div>
+        <div class="editor-field"><label for="lng-${item.id}">경도</label><input id="lng-${item.id}" data-field="lng" type="number" step="any" value="${escapeHtml(item.lng)}" required></div>
+        <div class="editor-field"><label for="transport-${item.id}">다음 이동</label><input id="transport-${item.id}" data-field="transportToNext" type="text" value="${escapeHtml(item.transportToNext || '')}" placeholder="마지막 일정은 비워두세요"></div>
+        <div class="editor-field"><label for="travel-${item.id}">이동(분)</label><input id="travel-${item.id}" data-field="travelMinutesToNext" type="number" min="0" step="1" value="${item.travelMinutesToNext ?? ''}" placeholder="마지막 일정은 비워두세요"></div>
+      </div>
+      <div class="editor-card-actions"><div class="move-actions"><button class="button button-quiet" type="button" data-move="up" ${index === 0 ? 'disabled' : ''}>↑ 위로</button><button class="button button-quiet" type="button" data-move="down" ${index === items.length - 1 ? 'disabled' : ''}>↓ 아래로</button></div><button class="button button-danger" type="button" data-delete="true">삭제</button></div>
+    </form>`).join('')}</div>`;
+  }
+
+  function renderList() {
+    const items = state.authorized ? itemsForDate(state.activeDate) : displayItemsForDate(state.activeDate);
+    const dateIndex = dates().indexOf(state.activeDate);
+    els.dayNumber.textContent = String(dateIndex + 1).padStart(2, '0');
+    els.dayHeading.textContent = state.activeDate ? formatLongDay(state.activeDate) : '일정 없음';
+    els.daySummary.textContent = `${items.length}개 일정`;
+    els.list.innerHTML = state.authorized ? renderEditorList(items) : renderReadList(items);
+    els.list.querySelectorAll('[data-stop-id]').forEach((card) => card.addEventListener('click', () => selectStop(card.dataset.stopId)));
+    if (state.authorized) bindEditorList();
+  }
+
+  function renderWeather() {
+    const weather = (state.tripInfo?.weather || []).find((entry) => entry.date === state.activeDate);
+    if (!weather) { els.weather.innerHTML = ''; return; }
+    els.weather.innerHTML = `<div class="weather-main"><span class="section-kicker">DA NANG WEATHER · ${escapeHtml(state.tripInfo.weatherCheckedAt || '')}</span><strong>${escapeHtml(weather.summary)}</strong><span class="weather-temp">${weather.high}° <i>/</i> ${weather.low}°</span></div><p>${escapeHtml(weather.advice)}</p><p class="weather-notice">${escapeHtml(state.tripInfo.weatherNotice || '')}</p><div class="weather-links"><a href="${escapeHtml(weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">기상청 예보 ↗</a><a href="${escapeHtml(state.tripInfo.weatherNoticeUrl || weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">다낭 기상 경보 ↗</a></div>`;
+  }
+
+  function renderMeals() {
+    const groups = mealGroupsForDate(state.activeDate);
+    const breakfastNote = state.activeDate === '2026-11-19' ? '첫날은 오전 비행 일정이라 공항·기내에서 식사하고, 호텔 조식은 11/20–22에 이용합니다.' : '아침은 호텔 조식(06:30–11:00)으로 잡았습니다.';
+    els.meals.innerHTML = `<p class="meal-day-note">${breakfastNote}${state.activeDate === '2026-11-22' ? ' 귀국편 일정으로 저녁 식사는 없습니다.' : ''}</p>${groups.map((group) => {
+      const chosen = selectedChoice(group);
+      return `<section class="meal-group" aria-label="${escapeHtml(group.label)} 후보"><div class="meal-group-heading"><h4>${escapeHtml(group.label)}</h4><span>${escapeHtml(group.time)} · ${escapeHtml(group.area)}</span></div><div class="meal-choices">${group.choices.map((choice) => `<article class="meal-choice ${choice.id === chosen.id ? 'is-selected' : ''}"><button class="meal-choice-button" type="button" data-meal="${escapeHtml(group.meal)}" data-choice="${escapeHtml(choice.id)}" aria-pressed="${choice.id === chosen.id}"><strong>${escapeHtml(choice.title)}</strong><span>${escapeHtml(choice.dish)}</span><small>${escapeHtml(choice.location)}</small></button><a class="map-link" href="${escapeHtml(mapsLocation(choice))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(choice.title)} Google Maps 위치 보기">map</a></article>`).join('')}</div></section>`;
+    }).join('')}`;
+    els.meals.querySelectorAll('[data-choice]').forEach((button) => button.addEventListener('click', () => {
+      const group = groups.find((entry) => entry.meal === button.dataset.meal);
+      const choice = group?.choices.find((entry) => entry.id === button.dataset.choice);
+      if (!group || !choice) return;
+      state.selectedMeals[`${group.date}:${group.meal}`] = choice.id;
+      state.activeId = itemsForDate(state.activeDate).find((item) => item.mealSlot === group.meal)?.id || null;
+      renderList(); renderMeals(); renderMap();
+    }));
+  }
+
+  function renderCandidates() {
+    const tabs = state.tripInfo?.candidateTabs || [];
+    els.candidateTabs.innerHTML = tabs.map((tab) => `<button class="candidate-tab" type="button" role="tab" aria-selected="${tab.id === state.candidateCategory}" data-category="${escapeHtml(tab.id)}">${escapeHtml(tab.label)}</button>`).join('');
+    els.candidateTabs.querySelectorAll('[data-category]').forEach((button) => button.addEventListener('click', () => { state.candidateCategory = button.dataset.category; renderCandidates(); }));
+    const candidates = (state.tripInfo?.candidates || []).filter((item) => item.category === state.candidateCategory);
+    els.candidates.innerHTML = candidates.map((item, index) => `<article class="candidate-card"><span class="candidate-index">${String(index + 1).padStart(2, '0')}</span><div class="candidate-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.location)}</span><p>${escapeHtml(item.description)}</p></div><a class="map-link" href="${escapeHtml(mapsLocation(item))}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(item.title)} Google Maps 위치 보기">map</a></article>`).join('') || '<p class="candidate-empty">등록된 후보가 없습니다.</p>';
+  }
+
+  function renderMap() {
+    const items = displayItemsForDate(state.activeDate);
+    els.routeSummary.textContent = items.length ? `${items.length}개 지점 · 직선 동선 미리보기` : '';
+    if (!map) return;
+    markersLayer.clearLayers(); mealMarkersLayer.clearLayers(); routeLayer.clearLayers();
+    if (!items.length) { map.setView([37.5665, 126.978], 11); return; }
+    const points = items.map((item, index) => {
+      const marker = L.marker([item.lat, item.lng], { icon: L.divIcon({ className: `custom-map-marker ${item.id === state.activeId ? 'is-active' : ''}`, html: `<span class="map-pin ${item.id === state.activeId ? 'is-active' : ''}"><span>${index + 1}</span></span>`, iconSize: [30, 30], iconAnchor: [15, 30] }), title: `${index + 1}. ${item.title}` }).addTo(markersLayer);
+      marker.on('click', () => selectStop(item.id));
+      return [item.lat, item.lng];
+    });
+    if (points.length > 1) L.polyline(points, { color: '#0879b8', weight: 3, opacity: .8, className: 'route-line' }).addTo(routeLayer);
+    const alternatePoints = [];
+    mealGroupsForDate(state.activeDate).forEach((group) => group.choices.forEach((choice) => {
+      const isSelected = selectedChoice(group).id === choice.id;
+      const marker = L.marker([choice.lat, choice.lng], { icon: L.divIcon({ className: 'meal-marker-wrap', html: `<span class="meal-map-pin ${isSelected ? 'is-selected' : ''}" title="${escapeHtml(choice.title)}">${isSelected ? '✓' : 'M'}</span>`, iconSize: [28, 28], iconAnchor: [14, 14] }), title: `${group.label}: ${choice.title}` }).addTo(mealMarkersLayer);
+      marker.on('click', () => {
+        state.selectedMeals[`${group.date}:${group.meal}`] = choice.id;
+        state.activeId = itemsForDate(state.activeDate).find((item) => item.mealSlot === group.meal)?.id || null;
+        renderList(); renderMeals(); renderMap();
+      });
+      alternatePoints.push([choice.lat, choice.lng]);
+    }));
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const bounds = L.latLngBounds([...points, ...alternatePoints]); map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14, animate: !reducedMotion });
+    if (state.activeId) { const selected = items.find((item) => item.id === state.activeId); if (selected) map.flyTo([selected.lat, selected.lng], Math.max(map.getZoom(), 13), { duration: reducedMotion ? 0 : .35 }); }
+  }
+
+  function selectStop(id) { state.activeId = id; renderList(); renderMap(); }
+
+  function updateItemFromForm(form) {
+    const item = state.itinerary.find((entry) => entry.id === form.dataset.editorId); if (!item) return;
+    form.querySelectorAll('[data-field]').forEach((input) => { const field = input.dataset.field; if (['durationMinutes', 'travelMinutesToNext', 'lat', 'lng'].includes(field)) item[field] = input.value === '' ? null : Number(input.value); else item[field] = input.value; });
+    if (item.travelMinutesToNext === null || item.travelMinutesToNext === undefined || item.travelMinutesToNext === '') item.travelMinutesToNext = null;
+    if (!item.transportToNext) item.transportToNext = null;
+  }
+
+  function bindEditorList() {
+    els.list.querySelectorAll('.editor-card').forEach((form) => form.addEventListener('input', () => updateItemFromForm(form)));
+    els.list.querySelectorAll('[data-delete]').forEach((button) => button.addEventListener('click', () => { state.itinerary = state.itinerary.filter((item) => item.id !== button.closest('.editor-card').dataset.editorId); render(); }));
+    els.list.querySelectorAll('[data-move]').forEach((button) => button.addEventListener('click', () => moveItem(button.closest('.editor-card').dataset.editorId, button.dataset.move)));
+  }
+
+  function moveItem(id, direction) {
+    const index = state.itinerary.findIndex((item) => item.id === id); if (index < 0) return;
+    const item = state.itinerary[index]; const target = direction === 'up' ? index - 1 : index + 1;
+    if (target < 0 || target >= state.itinerary.length || state.itinerary[target].date !== item.date) return;
+    [state.itinerary[index], state.itinerary[target]] = [state.itinerary[target], state.itinerary[index]]; render();
+  }
+
+  function render() {
+    renderHeader(); renderDayTabs(); renderWeather(); renderList(); renderMeals(); renderCandidates(); renderMap();
+    els.auth.classList.toggle('hidden', !editMode || state.authorized);
+    els.toolbar.classList.toggle('hidden', !editMode || !state.authorized);
+    document.body.classList.toggle('is-editor', state.authorized);
+  }
+
+  async function loadItinerary() {
+    if (staticSite) {
+      const payload = JSON.parse($('#itinerary-data').textContent);
+      state.itinerary = payload.itinerary; state.updatedAt = payload.updatedAt; state.activeDate = dates()[0];
+      state.tripInfo = JSON.parse($('#trip-info-data').textContent);
+      render();
+      return;
+    }
+    const [response, infoResponse] = await Promise.all([fetch('/api/itinerary'), fetch('/trip-info.json').catch(() => null)]);
+    if (!response.ok) throw new Error('일정을 불러오지 못했습니다.');
+    const payload = await response.json(); state.itinerary = payload.itinerary; state.updatedAt = payload.updatedAt; state.activeDate = dates()[0];
+    if (infoResponse?.ok) state.tripInfo = await infoResponse.json();
+    render();
+  }
+
+  async function validateToken(token) {
+    const response = await fetch('/api/editor/session', { headers: { Authorization: `Bearer ${token}` } });
+    if (!response.ok) throw new Error('토큰이 올바르지 않습니다.');
+  }
+
+  async function attemptSession(token) {
+    if (!token) return;
+    try { await validateToken(token); state.authorized = true; render(); } catch { clearToken(); els.authError.textContent = '토큰을 확인할 수 없습니다. 읽기 화면으로 표시합니다.'; }
+  }
+
+  async function saveItinerary() {
+    if (staticSite || state.saving) return;
+    state.saving = true; els.save.disabled = true; els.save.textContent = '저장 중…'; els.editorMessage.classList.add('hidden');
+    try {
+      const payloadItems = state.itinerary.map((item) => item.id.startsWith('client-') ? { ...item, id: undefined } : item);
+      const response = await fetch('/api/itinerary', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${getToken()}` }, body: JSON.stringify({ itinerary: payloadItems }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || '저장하지 못했습니다.');
+      state.itinerary = payload.itinerary; state.updatedAt = payload.updatedAt; state.editorMessage.textContent = '변경사항을 저장했습니다.'; state.editorMessage.classList.remove('hidden'); render();
+    } catch (error) {
+      state.editorMessage.textContent = error.message; state.editorMessage.classList.remove('hidden');
+      if (error.message.toLowerCase().includes('token')) { state.authorized = false; clearToken(); render(); }
+    } finally { state.saving = false; els.save.disabled = false; els.save.textContent = '변경 저장'; }
+  }
+
+  function addStop() {
+    const items = itemsForDate(state.activeDate); const last = items.at(-1);
+    if (last) { last.transportToNext = last.transportToNext || '도보'; last.travelMinutesToNext = last.travelMinutesToNext ?? 10; }
+    const newItem = { id: `client-${crypto.randomUUID()}`, date: state.activeDate, startTime: last ? last.startTime : '09:00', title: '새 일정', location: '장소를 입력하세요', note: '', durationMinutes: 60, transportToNext: '도보', travelMinutesToNext: 10, lat: 37.5665, lng: 126.978 };
+    const insertAt = last ? state.itinerary.findIndex((item) => item.id === last.id) + 1 : state.itinerary.length;
+    state.itinerary.splice(insertAt, 0, newItem);
+    render(); const newCard = els.list.querySelector(`[data-editor-id="${newItem.id}"]`); newCard?.scrollIntoView({ behavior: 'smooth', block: 'center' }); newCard?.querySelector('[data-field="title"]')?.select();
+  }
+
+  els.authForm.addEventListener('submit', async (event) => { event.preventDefault(); els.authError.textContent = ''; const token = els.authToken.value.trim(); try { await validateToken(token); setToken(token); state.authorized = true; els.authToken.value = ''; render(); } catch { clearToken(); els.authError.textContent = '토큰이 올바르지 않습니다. 다시 입력해 주세요.'; } });
+  els.addStop.addEventListener('click', addStop); els.cancelEdit.addEventListener('click', () => { window.location.href = '/'; }); els.logout.addEventListener('click', () => { clearToken(); window.location.href = '/'; }); els.save.addEventListener('click', saveItinerary);
+  initMap();
+  loadItinerary().then(() => editMode && attemptSession(getToken())).catch((error) => { els.list.innerHTML = `<div class="editor-empty">${escapeHtml(error.message)}</div>`; });
+})();
+
+</script>
+</body>
+</html>
