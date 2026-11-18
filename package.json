@@ -4,7 +4,7 @@
   "private": true,
   "description": "A single-trip itinerary map with a small Node.js server.",
   "scripts": {
-    "start": "node server.js",
+    "start": "node local-server.js",
     "build:static": "node scripts/build-static.js"
   }
 }
