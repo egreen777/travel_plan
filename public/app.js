@@ -8,6 +8,27 @@
   let markersLayer;
   let mealMarkersLayer;
   let routeLayer;
+  const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=16.0544&longitude=108.2022&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Asia%2FBangkok&forecast_days=16';
+  const WMO_SUMMARY = { 0: '맑음', 1: '대체로 맑음', 2: '구름 조금', 3: '흐림', 45: '안개', 48: '안개', 51: '약한 이슬비', 53: '이슬비', 55: '강한 이슬비', 61: '약한 비', 63: '비', 65: '강한 비', 80: '소나기', 81: '소나기', 82: '강한 소나기', 95: '뇌우', 96: '뇌우', 99: '뇌우' };
+  let liveWeather = {};
+  let liveCheckedAt = '';
+
+  async function loadLiveWeather() {
+    try {
+      const response = await fetch(WEATHER_URL);
+      if (!response.ok) return;
+      const { daily } = await response.json();
+      liveWeather = Object.fromEntries(daily.time.map((date, index) => [date, {
+        high: Math.round(daily.temperature_2m_max[index]),
+        low: Math.round(daily.temperature_2m_min[index]),
+        summary: WMO_SUMMARY[daily.weather_code[index]] || '날씨 정보',
+      }]));
+      liveCheckedAt = new Intl.DateTimeFormat('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date());
+      renderWeather();
+    } catch {
+      // 실패하면 trip-info.json에 적힌 기본값을 그대로 보여줍니다.
+    }
+  }
 
   const $ = (selector) => document.querySelector(selector);
   const els = {
@@ -126,7 +147,10 @@
   function renderWeather() {
     const weather = (state.tripInfo?.weather || []).find((entry) => entry.date === state.activeDate);
     if (!weather) { els.weather.innerHTML = ''; return; }
-    els.weather.innerHTML = `<div class="weather-main"><span class="section-kicker">DA NANG WEATHER · ${escapeHtml(state.tripInfo.weatherCheckedAt || '')}</span><strong>${escapeHtml(weather.summary)}</strong><span class="weather-temp">${weather.high}° <i>/</i> ${weather.low}°</span></div><p>${escapeHtml(weather.advice)}</p><p class="weather-notice">${escapeHtml(state.tripInfo.weatherNotice || '')}</p><div class="weather-links"><a href="${escapeHtml(weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">기상청 예보 ↗</a><a href="${escapeHtml(state.tripInfo.weatherNoticeUrl || weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">다낭 기상 경보 ↗</a></div>`;
+    const live = liveWeather[state.activeDate];
+    const view = live ? { ...weather, ...live } : weather;
+    const checkedAt = live ? `실시간 ${liveCheckedAt}` : (state.tripInfo.weatherCheckedAt || '');
+    els.weather.innerHTML = `<div class="weather-main"><span class="section-kicker">DA NANG WEATHER · ${escapeHtml(checkedAt)}</span><strong>${escapeHtml(view.summary)}</strong><span class="weather-temp">${view.high}° <i>/</i> ${view.low}°</span></div><p>${escapeHtml(weather.advice)}</p><p class="weather-notice">${escapeHtml(state.tripInfo.weatherNotice || '')}</p><div class="weather-links"><a href="${escapeHtml(weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">기상청 예보 ↗</a><a href="${escapeHtml(state.tripInfo.weatherNoticeUrl || weather.sourceUrl)}" target="_blank" rel="noopener noreferrer">다낭 기상 경보 ↗</a></div>`;
   }
 
   function renderMeals() {
@@ -213,9 +237,11 @@
 
   async function loadItinerary() {
     if (staticSite) {
-      const payload = JSON.parse($('#itinerary-data').textContent);
+      const [response, infoResponse] = await Promise.all([fetch('/itinerary.json'), fetch('/trip-info.json')]);
+      if (!response.ok) throw new Error('일정을 불러오지 못했습니다.');
+      const payload = await response.json();
       state.itinerary = payload.itinerary; state.updatedAt = payload.updatedAt; state.activeDate = dates()[0];
-      state.tripInfo = JSON.parse($('#trip-info-data').textContent);
+      if (infoResponse.ok) state.tripInfo = await infoResponse.json();
       render();
       return;
     }
@@ -263,5 +289,6 @@
   els.authForm.addEventListener('submit', async (event) => { event.preventDefault(); els.authError.textContent = ''; const token = els.authToken.value.trim(); try { await validateToken(token); setToken(token); state.authorized = true; els.authToken.value = ''; render(); } catch { clearToken(); els.authError.textContent = '토큰이 올바르지 않습니다. 다시 입력해 주세요.'; } });
   els.addStop.addEventListener('click', addStop); els.cancelEdit.addEventListener('click', () => { window.location.href = '/'; }); els.logout.addEventListener('click', () => { clearToken(); window.location.href = '/'; }); els.save.addEventListener('click', saveItinerary);
   initMap();
+  loadLiveWeather();
   loadItinerary().then(() => editMode && attemptSession(getToken())).catch((error) => { els.list.innerHTML = `<div class="editor-empty">${escapeHtml(error.message)}</div>`; });
 })();
